@@ -1,10 +1,34 @@
 from django.shortcuts import render,redirect
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate, login
+from django.http import JsonResponse
 from django.contrib import messages
 from django.http import HttpResponse
 from  apps.pages.helpers.library.forms import BookForm
 from .models import Book
+from django.db.models import Q
+
+
+def search_books(request):
+    query = request.GET.get('q', '')
+    results = []
+
+    if query:
+        books = Book.objects.filter(
+            Q(title__icontains=query) |
+            Q(author__icontains=query) |
+            Q(department__icontains=query)
+        )
+        for book in books:
+            results.append({
+                'title': book.title,
+                'author': book.author,
+                'department': book.department,
+                'isbn': book.isbn,
+                'published_date': book.published_date.strftime('%Y-%m-%d')
+            })
+
+    return JsonResponse({'results': results})
 
 def index(request):
     form = AuthenticationForm(request, data=request.POST or None)

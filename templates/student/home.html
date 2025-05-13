@@ -1,0 +1,104 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Book Search</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    .sidebar {
+      min-height: 100vh;
+      background-color: #343a40;
+    }
+    .sidebar .nav-link {
+      color: #fff;
+    }
+    .sidebar .nav-link.active {
+      background-color: #495057;
+    }
+    .content {
+      padding: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container-fluid">
+  <div class="row">
+    <!-- Sidebar -->
+    <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+      <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a class="nav-link active" href="#">
+              <i class="fas fa-search"></i> Search Books
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+      <div class="content">
+        <h2 class="mb-4">Search for Books</h2>
+
+        <input type="text" id="searchInput" class="form-control mb-4" placeholder="Search by title, author, or department...">
+
+        <table class="table table-striped" id="resultsTable">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Department</th>
+              <th>ISBN</th>
+              <th>Published</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Dynamic content here -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  let debounceTimer;
+  const searchInput = document.getElementById('searchInput');
+  const resultsTableBody = document.querySelector('#resultsTable tbody');
+
+  searchInput.addEventListener('input', function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      const query = searchInput.value.trim();
+      fetch(`/student/search-books/?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+          resultsTableBody.innerHTML = '';
+          if (data.results.length > 0) {
+            data.results.forEach(book => {
+              const row = `<tr>
+                <td>${book.title}</td>
+                <td>${book.author}</td>
+                <td>${book.department}</td>
+                <td>${book.isbn}</td>
+                <td>${book.published_date}</td>
+              </tr>`;
+              resultsTableBody.innerHTML += row;
+            });
+          } else {
+            resultsTableBody.innerHTML = '<tr><td colspan="5" class="text-center">No results found.</td></tr>';
+          }
+        });
+    }, 400);
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
