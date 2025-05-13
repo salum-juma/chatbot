@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
-    path('', include('chatbot.apps.pages.urls')),
+    # path('', include('chatbot.apps.pages.urls')),
     # path('', include('chatbot.apps.dyn_dt.urls')),
     # path('', include('chatbot.apps.dyn_api.urls')),
     # path('charts/', include('chatbot.apps.charts.urls')),
