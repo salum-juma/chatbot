@@ -89,3 +89,9 @@ def add_book(request):
 def view_books(request):
     books = Book.objects.all()
     return render(request, 'librarian/view_books.html', {'books': books})
+
+
+
+def custom_logout(request):
+    logout(request)  
+    return HttpResponseRedirect('/login/') 

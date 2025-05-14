@@ -11,4 +11,5 @@ urlpatterns = [
     path('student/search-books/', views.search_books, name='search_books'),
     path('view-books/', views.view_books, name='view_books'),
     path('home', views.home, name='home'),
+    path('logout/', views.custom_logout, name='logout'),
 ]

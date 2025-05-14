@@ -36,22 +36,9 @@
 <div class="container-fluid">
     <div class="row">
         <!-- Sidebar -->
-        <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
-            <div class="position-sticky pt-3">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="{% url 'add_book' %}">
-                            <i class="fas fa-plus"></i> Add Books
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'view_books' %}">
-                            <i class="fas fa-book"></i> View All Books
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
+          <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+      {% include 'librarian/partial/sidebar.html' %}
+         </nav>
 
         <!-- Main Content -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
