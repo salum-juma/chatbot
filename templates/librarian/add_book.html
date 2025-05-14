@@ -1,4 +1,5 @@
-{% load widget_tweaks %}
+{% load static widget_tweaks %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,9 +38,9 @@
   <div class="container-fluid">
     <div class="row">
       <!-- Sidebar -->
-       <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
-      {% include 'librarian/partial/sidebar.html' %}
-    </nav>
+      <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+        {% include 'librarian/partial/sidebar.html' %}
+      </nav>
 
       <!-- Main Content -->
       <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
@@ -53,31 +54,93 @@
             <div class="mb-3">
               <label for="id_title" class="form-label">Title</label>
               {{ form.title|add_class:"form-control" }}
+              {% if form.title.errors %}
+                <div class="text-danger">
+                  {% for error in form.title.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
             </div>
 
             <div class="mb-3">
               <label for="id_author" class="form-label">Author</label>
-              {{ form.author|add_class:"form-control" }}
+              <select name="author" id="id_author" class="form-control">
+                <option value="">Select an Author</option>
+                {% for author in authors %}
+                  <option value="{{ author.id }}" {% if form.author.value == author.id %}selected{% endif %}>{{ author.name }}</option>
+                {% empty %}
+                  <option value="">No authors available</option>
+                {% endfor %}
+              </select>
+              <div class="mt-2">
+                <input type="text" class="form-control" placeholder="Or enter a new author" name="new_author" id="new_author">
+              </div>
+              {% if form.author.errors %}
+                <div class="text-danger">
+                  {% for error in form.author.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
             </div>
 
             <div class="mb-3">
               <label for="id_department" class="form-label">Department</label>
-              {{ form.department|add_class:"form-control" }}
+              <select name="department" id="id_department" class="form-control">
+                <option value="">Select a Department</option>
+                {% for department in departments %}
+                  <option value="{{ department.id }}" {% if form.department.value == department.id %}selected{% endif %}>{{ department.name }}</option>
+                {% empty %}
+                  <option value="">No departments available</option>
+                {% endfor %}
+              </select>
+              <div class="mt-2">
+                <input type="text" class="form-control" placeholder="Or enter a new department" name="new_department" id="new_department">
+              </div>
+              {% if form.department.errors %}
+                <div class="text-danger">
+                  {% for error in form.department.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
             </div>
 
             <div class="mb-3">
               <label for="id_isbn" class="form-label">ISBN</label>
               {{ form.isbn|add_class:"form-control" }}
+              {% if form.isbn.errors %}
+                <div class="text-danger">
+                  {% for error in form.isbn.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
             </div>
 
             <div class="mb-3">
               <label for="id_published_date" class="form-label">Published Date</label>
               <input type="date" name="published_date" id="id_published_date" class="form-control" value="{{ form.published_date.value }}">
+              {% if form.published_date.errors %}
+                <div class="text-danger">
+                  {% for error in form.published_date.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
             </div>
 
             <div class="mb-3">
               <label for="id_description" class="form-label">Description</label>
               {{ form.description|add_class:"form-control" }}
+              {% if form.description.errors %}
+                <div class="text-danger">
+                  {% for error in form.description.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
             </div>
 
             <button type="submit" class="btn btn-primary">Add Book</button>

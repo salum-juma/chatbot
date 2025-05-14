@@ -5,8 +5,9 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.http import HttpResponse
 from  apps.pages.helpers.library.forms import BookForm,SuggestionForm
-from .models import Book,Suggestion
+from .models import Book,Suggestion,Author,Department
 from django.db.models import Q
+from django.shortcuts import redirect
 
 
 def search_books(request):
@@ -14,21 +15,23 @@ def search_books(request):
     results = []
 
     if query:
+        
         books = Book.objects.filter(
             Q(title__icontains=query) |
-            Q(author__icontains=query) |
-            Q(department__icontains=query)
+            Q(author__name__icontains=query) |  
+            Q(department__name__icontains=query)  
         )
         for book in books:
             results.append({
                 'title': book.title,
-                'author': book.author,
-                'department': book.department,
+                'author': book.author.name,  
+                'department': book.department.name,  
                 'isbn': book.isbn,
                 'published_date': book.published_date.strftime('%Y-%m-%d')
             })
 
     return JsonResponse({'results': results})
+
 
 def index(request):
     form = AuthenticationForm(request, data=request.POST or None)
@@ -59,7 +62,8 @@ def index(request):
 def home(request):
     user = request.user
     if user.role == 'librarian':
-        return render(request, 'librarian/home.html', {'name': user.full_name})
+          return redirect('librarian/home')
+        
     elif user.role == 'student':
         return render(request, 'student/home.html', {'name': user.full_name})
     else:
@@ -72,19 +76,70 @@ def student_home(request):
 
 
 def librarian_home(request):
-    return render(request, 'librarian/home.html')
+    total_books = Book.objects.count()  
+    total_authors = Author.objects.count()  
+    total_departments = Department.objects.count()  
+
+    return render(request, 'librarian/home.html', {
+        'name': 'library',
+        'total_books': total_books,
+        'total_authors': total_authors,
+        'total_departments': total_departments,
+    })
+
 
 
 def add_book(request):
+    authors = Author.objects.all()
+    departments = Department.objects.all()
+    form = BookForm(request.POST or None)
+    
     if request.method == 'POST':
-        form = BookForm(request.POST)  
-        if form.is_valid():
-            form.save()  
-            return redirect('view_books')  
-    else:
-        form = BookForm()  
+        new_author = request.POST.get('new_author')
+        new_department = request.POST.get('new_department')
 
-    return render(request, 'librarian/add_book.html', {'form': form})
+        
+        if new_author:
+            author, created = Author.objects.get_or_create(name=new_author)
+        else:
+            author_id = request.POST.get('author')
+            if author_id:
+                try:
+                    author = Author.objects.get(id=author_id)
+                except Author.DoesNotExist:
+                    author = None
+            else:
+                author = None
+
+        
+        if new_department:
+            department, created = Department.objects.get_or_create(name=new_department)
+        else:
+            department_id = request.POST.get('department')
+            if department_id:
+                try:
+                    department = Department.objects.get(id=department_id)
+                except Department.DoesNotExist:
+                    department = None
+            else:
+                department = None
+
+        if form.is_valid():
+            book = form.save(commit=False)
+            book.author = author  
+            book.department = department  
+            book.save()
+            return redirect('view_books')  
+
+        else:
+            print(form.errors)  
+
+    return render(request, 'librarian/add_book.html', {'form': form, 'authors': authors, 'departments': departments})
+
+
+
+
+
 
 def view_books(request):
     books = Book.objects.all()
@@ -96,7 +151,7 @@ def suggestion_page(request):
         if form.is_valid():
             suggestion = form.save(commit=False)
             if request.user.is_authenticated:
-                suggestion.user = request.user  # optional
+                suggestion.user = request.user  
             suggestion.save()
             messages.success(request, 'Thank you for your suggestion!')
             return redirect('suggestion_page')

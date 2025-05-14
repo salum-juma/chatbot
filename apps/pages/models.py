@@ -51,17 +51,30 @@ class Student(models.Model):
     def __str__(self):
         return f"{self.user.full_name} ({self.user.registration_no})"
 
+class Department(models.Model):
+    name = models.CharField(max_length=100, unique=True)
 
+    def __str__(self):
+        return self.name
+
+
+class Author(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+        
 class Book(models.Model):
     title = models.CharField(max_length=255)
-    author = models.CharField(max_length=255)
-    department = models.CharField(max_length=100)
+    author = models.ForeignKey(Author, on_delete=models.SET_NULL, null=True)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True)
     isbn = models.CharField(max_length=13, unique=True)
     published_date = models.DateField()
     description = models.TextField(blank=True)
 
     def __str__(self):
         return self.title
+
 
 
 class Suggestion(models.Model):
@@ -79,6 +92,8 @@ class Suggestion(models.Model):
 
     def __str__(self):
         return f"Suggestion #{self.id} ({self.get_suggestion_type_display()})"
+
+
 
 
 # Create your models here.
