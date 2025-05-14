@@ -63,6 +63,24 @@ class Book(models.Model):
     def __str__(self):
         return self.title
 
+
+class Suggestion(models.Model):
+    SUGGESTION_TYPES = [
+        ('feature', 'Feature Request'),
+        ('bug', 'Bug Report'),
+        ('general', 'General Feedback'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='suggestions')
+    suggestion_type = models.CharField(max_length=20, choices=SUGGESTION_TYPES, default='general')
+    message = models.TextField()
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    is_reviewed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Suggestion #{self.id} ({self.get_suggestion_type_display()})"
+
+
 # Create your models here.
 
 class Product(models.Model):

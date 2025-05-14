@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Suggestions</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="container py-5">
+
+    <h2 class="mb-4 text-center">View Suggestions</h2>
+
+    {% if suggestions %}
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Suggestion Type</th>
+                    <th>Message</th>
+                    <th>Submitted At</th>
+                    <th>Submitted By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for suggestion in suggestions %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ suggestion.get_suggestion_type_display }}</td>
+                        <td>{{ suggestion.message }}</td>
+                        <td>{{ suggestion.submitted_at }}</td>
+                        <td>{% if suggestion.user %}{{ suggestion.user.registration_no }}{% else %}Anonymous{% endif %}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No suggestions yet!</p>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{% url 'home' %}" class="btn btn-link">Back to Home</a>
+    </div>
+
+</body>
+</html>

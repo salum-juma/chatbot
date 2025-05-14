@@ -4,8 +4,8 @@ from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
 from django.contrib import messages
 from django.http import HttpResponse
-from  apps.pages.helpers.library.forms import BookForm
-from .models import Book
+from  apps.pages.helpers.library.forms import BookForm,SuggestionForm
+from .models import Book,Suggestion
 from django.db.models import Q
 
 
@@ -90,6 +90,23 @@ def view_books(request):
     books = Book.objects.all()
     return render(request, 'librarian/view_books.html', {'books': books})
 
+def suggestion_page(request):
+    if request.method == 'POST':
+        form = SuggestionForm(request.POST)
+        if form.is_valid():
+            suggestion = form.save(commit=False)
+            if request.user.is_authenticated:
+                suggestion.user = request.user  # optional
+            suggestion.save()
+            messages.success(request, 'Thank you for your suggestion!')
+            return redirect('suggestion_page')
+    else:
+        form = SuggestionForm()
+    return render(request, 'common/suggestion_form.html', {'form': form})
+
+def view_suggestions(request):
+    suggestions = Suggestion.objects.all()
+    return render(request, 'common/view_suggestions.html', {'suggestions': suggestions})
 
 
 def custom_logout(request):

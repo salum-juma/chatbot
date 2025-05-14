@@ -12,4 +12,7 @@ urlpatterns = [
     path('view-books/', views.view_books, name='view_books'),
     path('home', views.home, name='home'),
     path('logout/', views.custom_logout, name='logout'),
+    path('suggestions/', views.suggestion_page, name='suggestion_page'),
+    path('view-suggestions/', views.view_suggestions, name='view_suggestions'),
+
 ]
