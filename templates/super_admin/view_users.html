@@ -68,7 +68,7 @@
                             <tbody>
                                 {% for user in users %}
                                 <tr>
-                                    <td>{{ user.id }}</td>
+                                    <td>{{ forloop.counter }}</td>
                                     <td>{{ user.full_name }}</td>
                                     <td>{{ user.email }}</td>
                                     <td>{{ user.role }}</td>
