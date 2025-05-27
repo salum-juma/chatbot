@@ -41,7 +41,7 @@ def index(request):
         try:
             # Parse JSON data
             data = json.loads(request.body)
-            registration_no = data.get('username')
+            registration_no = data.get('registration')
             password = data.get('password')
             to_json = data.get('toJson', False)
 
@@ -67,11 +67,13 @@ def index(request):
                 else:
                     return HttpResponse("default")
             else:
-                return JsonResponse({'status': 'error', 'message': 'Invalid credentials'}, status=401)
+                return JsonResponse({'status': 'false', 'message': 'Invalid credentials'}, status=401)
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
     else:
         return JsonResponse({'error': 'Only POST requests allowed'}, status=405)
+    
+
 
 def home(request):
     user = request.user
