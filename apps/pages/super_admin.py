@@ -70,3 +70,8 @@ def add_user_page(request):
         'form': form,
         'departments': departments
     })
+
+
+def view_all_users(request):
+    users = User.objects.all()
+    return render(request, 'super_admin/view_users.html', {'users': users})

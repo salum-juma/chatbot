@@ -19,5 +19,7 @@ urlpatterns = [
 
     #super admin routes:
      path('add-user-page', super_admin.add_user_page, name='add_user_page'),
+      path('super_admin/view-users/', super_admin.view_all_users, name='view_all_users')
+     
 
 ]
