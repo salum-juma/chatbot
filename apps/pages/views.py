@@ -164,6 +164,9 @@ def view_suggestions(request):
     return render(request, 'common/view_suggestions.html', {'suggestions': suggestions})
 
 
+
+
+
 def custom_logout(request):
     logout(request)  
     return HttpResponseRedirect('/login/') 

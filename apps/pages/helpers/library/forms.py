@@ -22,5 +22,3 @@ class BookForm(forms.ModelForm):
         self.fields['author'].queryset = Author.objects.all()
         self.fields['department'].queryset = Department.objects.all()
 
-
-
