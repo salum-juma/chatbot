@@ -7,7 +7,8 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: -1; /* Behind the form */
+    z-index: -1;
+    /* Behind the form */
     overflow: hidden;
   }
 
@@ -21,14 +22,34 @@
     filter: blur(6px) brightness(0.6);
   }
 
-  .background-slideshow img:nth-child(1) { animation-delay: 0s; }
-  .background-slideshow img:nth-child(2) { animation-delay: 10s; }
-  .background-slideshow img:nth-child(3) { animation-delay: 20s; }
+  .background-slideshow img:nth-child(1) {
+    animation-delay: 0s;
+  }
+
+  .background-slideshow img:nth-child(2) {
+    animation-delay: 10s;
+  }
+
+  .background-slideshow img:nth-child(3) {
+    animation-delay: 20s;
+  }
 
   @keyframes fade {
-    0%, 100% { opacity: 0; }
-    10%, 30% { opacity: 1; }
-    40%, 100% { opacity: 0; }
+
+    0%,
+    100% {
+      opacity: 0;
+    }
+
+    10%,
+    30% {
+      opacity: 1;
+    }
+
+    40%,
+    100% {
+      opacity: 0;
+    }
   }
 </style>
 
@@ -48,10 +69,10 @@
   <div class="card p-4 shadow-lg" style="width: 100%; max-width: 400px;">
 
     {% if form.non_field_errors %}
-  <div class="alert alert-danger">
-    {{ form.non_field_errors.0 }}
-  </div>
-{% endif %}
+    <div class="alert alert-danger">
+      {{ form.non_field_errors.0 }}
+    </div>
+    {% endif %}
 
 
     <form method="post" action="{% url 'login' %}">
@@ -61,10 +82,11 @@
 
       <!-- Username input -->
       <div class="mb-3">
-        <label for="id_username" class="form-label">Username</label>
-        <input type="text" name="username" class="form-control" id="id_username" value="{{ form.username.value|default:'' }}">
+        <label for="id_username" class="form-label">Registration No</label>
+        <input type="text" name="username" class="form-control" id="id_username"
+          value="{{ form.username.value|default:'' }}">
         {% if form.username.errors %}
-          <div class="text-danger small">{{ form.username.errors.0 }}</div>
+        <div class="text-danger small">{{ form.username.errors.0 }}</div>
         {% endif %}
       </div>
 
@@ -73,7 +95,7 @@
         <label for="id_password" class="form-label">Password</label>
         <input type="password" name="password" class="form-control" id="id_password">
         {% if form.password.errors %}
-          <div class="text-danger small">{{ form.password.errors.0 }}</div>
+        <div class="text-danger small">{{ form.password.errors.0 }}</div>
         {% endif %}
       </div>
 

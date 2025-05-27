@@ -8,7 +8,8 @@ from  apps.pages.helpers.library.forms import BookForm,SuggestionForm
 from .models import Book,Suggestion,Author,Department
 from django.db.models import Q
 from django.shortcuts import redirect
-
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 def search_books(request):
     query = request.GET.get('q', '')
@@ -33,27 +34,52 @@ def search_books(request):
     return JsonResponse({'results': results})
 
 
+
 def index(request):
     form = AuthenticationForm(request, data=request.POST or None)
 
     if request.method == 'POST':
         if form.is_valid():
-            username = form.cleaned_data.get('username')
+            # Instead of username, get registration_no
+            registration_no = form.cleaned_data.get('username')  # using 'username' field to collect registration_no
             password = form.cleaned_data.get('password')
 
-            user = authenticate(request, username=username, password=password)
+            # Authenticate using custom user model
+            user = authenticate(request, username=registration_no, password=password)
+
             if user is not None:
-                login(request, user)                
+                login(request, user)
+
+                # Redirect based on role BEFORE returning JSON
+               
                 if user.role == 'student':
-                    return HttpResponse("student")  
+                    redirect_url = HttpResponse("student")
                 elif user.role == 'librarian':
-                    return HttpResponse("librarian")  
+                    redirect_url = HttpResponse("librarian")
                 else:
-                    return HttpResponse("default")  
+                    redirect_url = HttpResponse("default")
+
+                # If it's an Ajax/JSON request, return JSON instead
+                if request.headers.get('Accept') == 'application/json' or request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+                    response_data = {
+                        'status': 'success',
+                        'role': user.role,
+                        'message': f"Logged in as {user.role}",
+                    }
+                    return JsonResponse(response_data)
+
+                # Otherwise, return the appropriate redirect
+                return redirect_url
             else:
-                messages.error(request, "Invalid username or password.")
+                error_msg = "Invalid registration number or password."
+                if request.headers.get('Accept') == 'application/json':
+                    return JsonResponse({'status': 'error', 'message': error_msg}, status=401)
+                messages.error(request, error_msg)
         else:
-            messages.error(request, "Invalid username or password.")
+            error_msg = "Invalid registration number or password."
+            if request.headers.get('Accept') == 'application/json':
+                return JsonResponse({'status': 'error', 'message': error_msg}, status=401)
+            messages.error(request, error_msg)
 
     return render(request, 'auth/login.html', {'form': form})
 
@@ -66,6 +92,9 @@ def home(request):
         
     elif user.role == 'student':
         return render(request, 'student/home.html', {'name': user.full_name})
+    
+    elif user.role == 'admin':
+        return redirect( 'add_user_page')
     else:
         return HttpResponse(f"You are logged in as a {user.role}.")
 
