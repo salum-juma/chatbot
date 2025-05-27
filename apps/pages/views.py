@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render,redirect
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate, login
@@ -34,56 +35,43 @@ def search_books(request):
     return JsonResponse({'results': results})
 
 
-
+@csrf_exempt
 def index(request):
-    form = AuthenticationForm(request, data=request.POST or None)
-
     if request.method == 'POST':
-        if form.is_valid():
-            # Instead of username, get registration_no
-            registration_no = form.cleaned_data.get('username')  # using 'username' field to collect registration_no
-            password = form.cleaned_data.get('password')
+        try:
+            # Parse JSON data
+            data = json.loads(request.body)
+            registration_no = data.get('username')
+            password = data.get('password')
+            to_json = data.get('toJson', False)
 
-            # Authenticate using custom user model
             user = authenticate(request, username=registration_no, password=password)
 
             if user is not None:
                 login(request, user)
 
-                # Redirect based on role BEFORE returning JSON
-               
-                if user.role == 'student':
-                    redirect_url = HttpResponse("student")
-                elif user.role == 'librarian':
-                    redirect_url = HttpResponse("librarian")
-                else:
-                    redirect_url = HttpResponse("default")
-
-                # If it's an Ajax/JSON request, return JSON instead
-                if request.headers.get('Accept') == 'application/json' or request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
-                    response_data = {
+                if to_json:
+                    return JsonResponse({
                         'status': 'success',
                         'role': user.role,
                         'message': f"Logged in as {user.role}",
-                    }
-                    return JsonResponse(response_data)
+                    })
 
-                # Otherwise, return the appropriate redirect
-                return redirect_url
+                # Normal role-based response
+                if user.role == 'admin':
+                    return redirect('add_user_page')
+                elif user.role == 'student':
+                    return HttpResponse("student")
+                elif user.role == 'librarian':
+                    return HttpResponse("librarian")
+                else:
+                    return HttpResponse("default")
             else:
-                error_msg = "Invalid registration number or password."
-                if request.headers.get('Accept') == 'application/json':
-                    return JsonResponse({'status': 'error', 'message': error_msg}, status=401)
-                messages.error(request, error_msg)
-        else:
-            error_msg = "Invalid registration number or password."
-            if request.headers.get('Accept') == 'application/json':
-                return JsonResponse({'status': 'error', 'message': error_msg}, status=401)
-            messages.error(request, error_msg)
-
-    return render(request, 'auth/login.html', {'form': form})
-
-
+                return JsonResponse({'status': 'error', 'message': 'Invalid credentials'}, status=401)
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
+    else:
+        return JsonResponse({'error': 'Only POST requests allowed'}, status=405)
 
 def home(request):
     user = request.user
