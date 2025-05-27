@@ -10,17 +10,13 @@
 
     <!-- Add Book Link -->
     <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'add_book' %}active{% endif %}" href="{% url 'add_book' %}">
-        <i class="fas fa-plus"></i> Add Books
+      <a class="nav-link {% if request.resolver_match.url_name == 'add_book' %}active{% endif %}"
+        href="{% url 'add_user_page' %}">
+        <i class="fas fa-plus"></i> Add User
       </a>
     </li>
 
-    <!-- View All Books Link -->
-    <li class="nav-item">
-      <a class="nav-link {% if request.resolver_match.url_name == 'view_books' %}active{% endif %}" href="{% url 'view_books' %}">
-        <i class="fas fa-book"></i> View All Books
-      </a>
-    </li>
+
 
     <!-- Logout Link -->
     <li class="nav-item">
