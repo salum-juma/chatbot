@@ -4,119 +4,289 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>View Books</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>View Books</title>
 
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome for icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome for icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
-    <style>
-        body {
-            overflow-x: hidden;
-        }
+  <style>
+    body {
+      overflow-x: hidden;
+    }
 
-        .sidebar {
-            min-height: 100vh;
-            background-color: #343a40;
-        }
+    .sidebar {
+      min-height: 100vh;
+      background-color: #343a40;
+    }
 
-        .sidebar .nav-link {
-            color: #fff;
-        }
+    .sidebar .nav-link {
+      color: #fff;
+    }
 
-        .sidebar .nav-link.active {
-            background-color: #495057;
-        }
+    .sidebar .nav-link.active {
+      background-color: #495057;
+    }
 
-        .content {
-            padding: 2rem;
-        }
-    </style>
+    .content {
+      padding: 2rem;
+    }
+  </style>
 </head>
 
 <body>
 
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
-                {% include 'librarian/partial/sidebar.html' %}
-            </nav>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+        {% include 'librarian/partial/sidebar.html' %}
+      </nav>
 
-            <!-- Main Content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <div
-                    class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">Books List</h1>
-                </div>
-
-                <div class="content">
-                    <h3>List of Books</h3>
-                    <div style="overflow-x: auto;">
-                        <table class="table table-striped table-bordered" style="min-width: 1000px;">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Title</th>
-                                    <th>Author</th>
-                                    <th>Department</th>
-                                    <th>ISBN</th>
-                                    <th>Published Date</th>
-                                    <th>Row Number</th>
-                                    <th>Rack Position</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for book in books %}
-                                <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>{{ book.title }}</td>
-                                    <td>{{ book.author }}</td>
-                                    <td>{{ book.department }}</td>
-                                    <td>{{ book.isbn }}</td>
-                                    <td>{{ book.published_date }}</td>
-                                    <td>{{ book.row_number }}</td>
-                                    <td>{{ book.rack_position }}</td>
-                                    <td>
-                                        <form method="post" action="{% url 'toggle_status' book.id %}">
-                                            {% csrf_token %}
-                                            <button
-                                                class="btn btn-sm {% if book.status == 'Available' %}btn-success{% else %}btn-warning{% endif %}"
-                                                type="submit">
-                                                {{ book.status }}
-                                            </button>
-                                        </form>
-                                    </td>
-                                    <td>
-                                        <form method="post" action="{% url 'delete_book' book.id %}"
-                                            onsubmit="return confirm('Are you sure you want to delete this book?');">
-                                            {% csrf_token %}
-                                            <button class="btn btn-sm btn-danger" type="submit">Delete</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="10" class="text-center">No books available.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-
-            </main>
+      <!-- Main Content -->
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        <div
+          class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+          <h1 class="h2">Books List</h1>
         </div>
-    </div>
 
-    <!-- Bootstrap 5 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <div class="content">
+          <h3>List of Books</h3>
+          <div style="overflow-x: auto;">
+            <table class="table table-striped table-bordered" style="min-width: 1000px;">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Title</th>
+                  <th>Author</th>
+                  <th>Department</th>
+                  <th>ISBN</th>
+                  <th>Published Date</th>
+                  <th>Row Number</th>
+                  <th>Rack Position</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for book in books %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ book.title }}</td>
+                  <td>{{ book.author }}</td>
+                  <td>{{ book.department }}</td>
+                  <td>{{ book.isbn }}</td>
+                  <td>{{ book.published_date }}</td>
+                  <td>{{ book.row_number }}</td>
+                  <td>{{ book.rack_position }}</td>
+                <td>
+                <form method="post" action="{% url 'toggle_status' book.id %}">
+                  {% csrf_token %}
+                 <button type="button"
+        class="btn btn-sm {% if book.status == 'Rendered' %}btn-warning{% else %}btn-success{% endif %} render-button"
+        data-book-id="{{ book.id }}"
+        data-book-title="{{ book.title }}"
+        data-rendered-to="{% if book.rendered_to %}{{ book.rendered_to.user.full_name }}{% else %}N/A{% endif %}"
+        data-reg-number="{% if book.rendered_to %}{{ book.rendered_to.reg_number }}{% else %}N/A{% endif %}"
+        data-render-from="{{ book.render_from }}"
+        data-render-to="{{ book.render_to }}"
+        {% if book.status == 'Rendered' %} data-bs-toggle="modal" data-bs-target="#renderDetailsModal" {% endif %}>
+  {{ book.status }}
+</button>
+
+
+                </form>
+              </td>
+
+                  <td>
+                    <form method="post" action="{% url 'delete_book' book.id %}"
+                      onsubmit="return confirm('Are you sure you want to delete this book?');">
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="10" class="text-center">No books available.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="renderModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog">
+            <form id="renderForm" method="POST">
+              {% csrf_token %}
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Render Book</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                  <input type="hidden" id="renderBookId" name="book_id">
+
+                  <div class="mb-3">
+                    <label>Reg Number</label>
+                    <input type="text" id="regNumber" name="reg_number" class="form-control" required>
+                  </div>
+
+                  <div class="mb-3">
+                    <label>Name</label>
+                    <input type="text" id="studentName" name="student_name" class="form-control" readonly>
+                  </div>
+
+                  <div class="mb-3">
+                    <label>Department</label>
+                    <input type="text" id="studentDept" name="student_dept" class="form-control" readonly>
+                  </div>
+
+                  <div class="mb-3">
+                    <label>From</label>
+                    <input type="date" id="renderFrom" name="render_from" class="form-control" required>
+                  </div>
+
+                  <div class="mb-3">
+                    <label>To</label>
+                    <input type="date" id="renderTo" name="render_to" class="form-control" required>
+                  </div>
+                </div>
+
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary">Render</button>
+                </div>
+              </div>
+            </form>
+
+          </div>
+        </div>
+<div class="modal fade" id="renderDetailsModal" tabindex="-1" aria-labelledby="renderDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" id="makeAvailableForm">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="renderDetailsModalLabel">Rendered Book Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p><strong>Title:</strong> <span id="modalBookTitle"></span></p>
+          <p><strong>Rendered To:</strong> <span id="modalRenderedTo"></span></p>
+          <p><strong>Reg No:</strong> <span id="modalRegNumber"></span></p>
+          <p><strong>From:</strong> <span id="modalRenderFrom"></span></p>
+          <p><strong>To:</strong> <span id="modalRenderTo"></span></p>
+        </div>
+        <div class="modal-footer">
+          <input type="hidden" name="book_id" id="modalBookId">
+          <button type="submit" class="btn btn-danger">Set to Available</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let selectedBookId = null;
+
+
+    document.getElementById('regNumber').addEventListener('blur', function () {
+      const regNumber = this.value;
+      fetch(`/get-student-info/?reg_number=${regNumber}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.name) {
+            document.getElementById('studentName').value = data.name;
+            document.getElementById('studentDept').value = data.department;
+          } else {
+            console.log(data);
+            alert('Student not found');
+          }
+        });
+    });
+
+    document.getElementById('renderForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const bookId = document.getElementById('renderBookId').value;
+      const formData = new FormData(this);
+
+      fetch(`/books/${bookId}/render/`, {
+        method: 'POST',
+        body: formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            location.reload();  // Refresh the page to reflect new status
+          } else {
+            alert(data.error || 'An error occurred');
+          }
+        });
+    });
+
+  </script>
+  <script>
+document.querySelectorAll('.render-button').forEach(button => {
+  button.addEventListener('click', () => {
+    const status = button.textContent.trim();
+    const bookId = button.dataset.bookId;
+
+    if (status === 'Rendered') {
+      // Populate and show the "Rendered Details" modal
+      document.getElementById('modalBookTitle').textContent = button.dataset.bookTitle;
+      document.getElementById('modalRenderedTo').textContent = button.dataset.renderedTo;
+      document.getElementById('modalRegNumber').textContent = button.dataset.regNumber;
+      document.getElementById('modalRenderFrom').textContent = button.dataset.renderFrom;
+      document.getElementById('modalRenderTo').textContent = button.dataset.renderTo;
+      document.getElementById('modalBookId').value = bookId;
+
+      new bootstrap.Modal(document.getElementById('renderDetailsModal')).show();
+    } else if (status === 'Available') {
+      // Reset and show the "Render Book" modal
+      document.getElementById('renderForm').reset();
+      document.getElementById('renderBookId').value = bookId;
+
+      new bootstrap.Modal(document.getElementById('renderModal')).show();
+    }
+  });
+});
+
+  // Handle set to available submit
+  document.getElementById('makeAvailableForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const bookId = document.getElementById('modalBookId').value;
+    fetch(`/books/${bookId}/set_available/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      } else {
+        alert(data.error || 'Error');
+      }
+    });
+  });
+</script>
+
 </body>
 
 </html>

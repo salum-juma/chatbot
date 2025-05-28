@@ -47,6 +47,9 @@ class Student(models.Model):
     phone_number = models.CharField(max_length=15, blank=True)
     gender = models.CharField(max_length=10, choices=[("Male", "Male"), ("Female", "Female")], blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
+    reg_number = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=100,default='Sample')
+    department =  models.CharField(max_length=100, default='General')
 
     def __str__(self):
         return f"{self.user.full_name} ({self.user.registration_no})"
@@ -69,7 +72,6 @@ class Book(models.Model):
         ('Available', 'Available'),
         ('Rendered', 'Rendered'),
     ]
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Available')
     title = models.CharField(max_length=255)
     author = models.ForeignKey(Author, on_delete=models.SET_NULL, null=True, blank=True)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
@@ -78,7 +80,10 @@ class Book(models.Model):
     description = models.TextField(blank=True)
     row_number = models.CharField(max_length=50, blank=True, null=True)  # newly added
     rack_position = models.CharField(max_length=50, blank=True, null=True)  # newly added
-
+    status = models.CharField(max_length=20, choices=[('Available', 'Available'), ('Rendered', 'Rendered')], default='Available')
+    rendered_to = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True, blank=True)
+    render_from = models.DateField(null=True, blank=True)
+    render_to = models.DateField(null=True, blank=True)
     def __str__(self):
         return self.title
 

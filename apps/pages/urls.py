@@ -24,6 +24,9 @@ urlpatterns = [
     # books
     path('books/<int:book_id>/toggle-status/', views.toggle_status, name='toggle_status'),
     path('books/<int:book_id>/delete/', views.delete_book, name='delete_book'),
+    path('books/<int:book_id>/render/', views.render_book, name='render_book'),
+    path('books/<int:book_id>/set_available/', views.set_book_available, name='set_book_available'),
+    path('get-student-info/', views.get_student_info, name='get_student_info'),
      
 
 ]

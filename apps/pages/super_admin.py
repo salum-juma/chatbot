@@ -53,13 +53,15 @@ def add_user_page(request):
             if department:
                 pass  # Extend model logic if you want to save department info
 
-            # Create Student profile if role is student
             if role == 'student':
                 Student.objects.create(
-                    user=user,
-                    enrollment_year=2025,  # Optionally pull this from the form
-                    program="Default Program"  # Can also be made dynamic
-                )
+                user=user,
+                enrollment_year=2025,  # Optionally make dynamic
+                program="Default Program",  # Optionally make dynamic
+                reg_number=new_reg_no,
+                name=username,
+                department=department.name if department else 'General'
+            )
 
             messages.success(request, "User created successfully.")
             return redirect('add_user_page')

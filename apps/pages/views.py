@@ -6,13 +6,65 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.http import HttpResponse
 from  apps.pages.helpers.library.forms import BookForm,SuggestionForm
-from .models import Book,Suggestion,Author,Department
+from .models import Book,Suggestion,Author,Department,Student,User
 from django.db.models import Q
 from django.shortcuts import redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
 from django.shortcuts import get_object_or_404
+from django.http import JsonResponse, HttpResponseNotAllowed
+
+def get_student_info(request):
+    reg_number = request.GET.get('reg_number')
+    try:
+        student = Student.objects.get(reg_number=reg_number)
+        return JsonResponse({
+            'name': student.name,
+            'department': student.department
+        })
+    except Student.DoesNotExist:
+        return JsonResponse({'error': 'Student not found'}, status=404)
+
+    
+    
+@csrf_exempt
+def set_book_available(request, book_id):
+    if request.method == 'POST':
+        book = get_object_or_404(Book, id=book_id)
+        book.status = 'Available'
+        book.rendered_to = None
+        book.render_from = None
+        book.render_to = None
+        book.save()
+    return JsonResponse({'success': 'Book marked as available'})
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+  
+@csrf_exempt
+def render_book(request, book_id):
+    if request.method == 'POST':
+        book = get_object_or_404(Book, id=book_id)
+        if book.status == 'Rendered':
+            return JsonResponse({'error': 'Book already rendered'}, status=400)
+
+        reg_number = request.POST.get('reg_number')
+        render_from = request.POST.get('render_from')
+        render_to = request.POST.get('render_to')
+
+        try:
+            student = Student.objects.get(reg_number=reg_number)
+            book.rendered_to = student
+            book.render_from = render_from
+            book.render_to = render_to
+            book.status = 'Rendered'
+            book.save()
+            return JsonResponse({'success': 'Book rendered successfully'})
+        except Student.DoesNotExist:
+            return JsonResponse({'error': 'Student not found'}, status=404)
+    
+    # If the request method is not POST, return a 405 Method Not Allowed response
+    return HttpResponseNotAllowed(['POST'])
+     
 
 def search_books(request):
     query = request.GET.get('q', '')
