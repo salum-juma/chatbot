@@ -11,6 +11,8 @@ from django.db.models import Q
 from django.shortcuts import redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_POST
+from django.shortcuts import get_object_or_404
 
 def search_books(request):
     query = request.GET.get('q', '')
@@ -158,7 +160,18 @@ def add_book(request):
 
 
 
+@require_POST
+def toggle_status(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+    book.status = 'Rendered' if book.status == 'Available' else 'Available'
+    book.save()
+    return redirect('view_books')
 
+@require_POST
+def delete_book(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+    book.delete()
+    return redirect('view_books')
 
 
 def view_books(request):

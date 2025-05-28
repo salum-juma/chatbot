@@ -18,8 +18,12 @@ urlpatterns = [
 
 
     #super admin routes:
-     path('add-user-page', super_admin.add_user_page, name='add_user_page'),
-      path('super_admin/view-users/', super_admin.view_all_users, name='view_all_users')
+    path('add-user-page', super_admin.add_user_page, name='add_user_page'),
+    path('super_admin/view-users/', super_admin.view_all_users, name='view_all_users'),
+
+    # books
+    path('books/<int:book_id>/toggle-status/', views.toggle_status, name='toggle_status'),
+    path('books/<int:book_id>/delete/', views.delete_book, name='delete_book'),
      
 
 ]

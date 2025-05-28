@@ -65,6 +65,11 @@ class Author(models.Model):
         return self.name
         
 class Book(models.Model):
+    STATUS_CHOICES = [
+        ('Available', 'Available'),
+        ('Rendered', 'Rendered'),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Available')
     title = models.CharField(max_length=255)
     author = models.ForeignKey(Author, on_delete=models.SET_NULL, null=True, blank=True)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
