@@ -15,7 +15,12 @@ class SuggestionForm(forms.ModelForm):
 class BookForm(forms.ModelForm):
     class Meta:
         model = Book
-        fields = ['title', 'author', 'department', 'isbn', 'published_date', 'description']
+        fields = [
+            'title', 'author', 'department',
+            'isbn', 'published_date', 'description',
+            'row_number', 'rack_position'
+        ]
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

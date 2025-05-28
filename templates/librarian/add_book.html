@@ -86,6 +86,30 @@
             </div>
 
             <div class="mb-3">
+  <label for="id_row_number" class="form-label">Row Number</label>
+  <input type="text" name="row_number" id="id_row_number" class="form-control" placeholder="e.g., Row 3" value="{{ form.row_number.value }}">
+  {% if form.row_number.errors %}
+    <div class="text-danger">
+      {% for error in form.row_number.errors %}
+        <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+<div class="mb-3">
+  <label for="id_rack_position" class="form-label">Rack Position (Optional)</label>
+  <input type="text" name="rack_position" id="id_rack_position" class="form-control" placeholder="e.g., Position 5" value="{{ form.rack_position.value }}">
+  {% if form.rack_position.errors %}
+    <div class="text-danger">
+      {% for error in form.rack_position.errors %}
+        <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+            <div class="mb-3">
               <label for="id_department" class="form-label">Department</label>
               <select name="department" id="id_department" class="form-control">
                 <option value="">Select a Department</option>

@@ -66,14 +66,17 @@ class Author(models.Model):
         
 class Book(models.Model):
     title = models.CharField(max_length=255)
-    author = models.ForeignKey(Author, on_delete=models.SET_NULL, null=True)
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True)
-    isbn = models.CharField(max_length=13, unique=True)
-    published_date = models.DateField()
+    author = models.ForeignKey(Author, on_delete=models.SET_NULL, null=True, blank=True)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+    isbn = models.CharField(max_length=13)
+    published_date = models.DateField(null=True, blank=True)
     description = models.TextField(blank=True)
+    row_number = models.CharField(max_length=50, blank=True, null=True)  # newly added
+    rack_position = models.CharField(max_length=50, blank=True, null=True)  # newly added
 
     def __str__(self):
         return self.title
+
 
 
 

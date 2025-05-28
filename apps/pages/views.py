@@ -71,7 +71,8 @@ def index(request):
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
     else:
-        return JsonResponse({'error': 'Only POST requests allowed'}, status=405)
+        return render(request, 'auth/login.html')
+
     
 
 
