@@ -19,7 +19,6 @@ def search_books(request):
     results = []
 
     if query:
-        
         books = Book.objects.filter(
             Q(title__icontains=query) |
             Q(author__name__icontains=query) |  
@@ -28,13 +27,17 @@ def search_books(request):
         for book in books:
             results.append({
                 'title': book.title,
-                'author': book.author.name,  
-                'department': book.department.name,  
+                'author': book.author.name,
+                'department': book.department.name,
                 'isbn': book.isbn,
-                'published_date': book.published_date.strftime('%Y-%m-%d')
+                'published_date': book.published_date.strftime('%Y-%m-%d') if book.published_date else '',
+                'row_number': book.row_number or '',
+                'rack_position': book.rack_position or '',
+                'description': (book.description[:100] + '...') if book.description else '',
             })
 
     return JsonResponse({'results': results})
+
 
 
 @csrf_exempt
