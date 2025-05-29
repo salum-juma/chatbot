@@ -1,0 +1,25 @@
+<div class="position-sticky pt-3">
+  <h6 class="text-light px-3 mb-3">Menu</h6>
+  <ul class="nav flex-column">
+    <!-- Search Books -->
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'student_home' or request.resolver_match.url_name == 'search_books' %}active{% endif %}" href="{% url 'student_home' %}">
+        <i class="fas fa-search"></i> Search Books
+      </a>
+    </li>
+
+    <!-- My Borrowed Books -->
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'get_borrowed_books' %}active{% endif %}" href="{% url 'get_borrowed_books' %}">
+        <i class="fas fa-book-reader"></i> My Borrowed Books
+      </a>
+    </li>
+
+    <!-- Logout -->
+    <li class="nav-item">
+      <a class="nav-link text-white" href="{% url 'logout' %}">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </a>
+    </li>
+  </ul>
+</div>

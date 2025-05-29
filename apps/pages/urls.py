@@ -1,7 +1,5 @@
 from django.urls import path
-
-from . import views
-from . import super_admin
+from . import super_admin, student, views
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -16,8 +14,7 @@ urlpatterns = [
     path('suggestions/', views.suggestion_page, name='suggestion_page'),
     path('view-suggestions/', views.view_suggestions, name='view_suggestions'),
 
-
-    #super admin routes:
+    # super admin routes:
     path('add-user-page', super_admin.add_user_page, name='add_user_page'),
     path('super_admin/view-users/', super_admin.view_all_users, name='view_all_users'),
 
@@ -27,6 +24,7 @@ urlpatterns = [
     path('books/<int:book_id>/render/', views.render_book, name='render_book'),
     path('books/<int:book_id>/set_available/', views.set_book_available, name='set_book_available'),
     path('get-student-info/', views.get_student_info, name='get_student_info'),
-     
 
+    # student
+    path('student/borrowed-books', student.get_borrowed_books, name='get_borrowed_books'),
 ]
