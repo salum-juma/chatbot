@@ -14,7 +14,10 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, HttpResponseNotAllowed
-
+from datetime import date
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from .models import Book, Penalty  
 
 def librarian_home(request):
     total_books = Book.objects.count()  
@@ -102,13 +105,32 @@ def view_books(request):
 def set_book_available(request, book_id):
     if request.method == 'POST':
         book = get_object_or_404(Book, id=book_id)
+
+        # Check if the book is overdue
+        if book.render_to and date.today() > book.render_to:
+            overdue_days = (date.today() - book.render_to).days
+            penalty_amount = overdue_days * 500  # 500 TZS per day
+
+            # Create a penalty
+            if book.rendered_to:  # ensure student is attached
+                Penalty.objects.create(
+                    student=book.rendered_to,
+                    book=book,
+                    amount=penalty_amount,
+                    reason=f"Returned {overdue_days} day(s) late"
+                )
+
+        # Reset book fields
         book.status = 'Available'
         book.rendered_to = None
         book.render_from = None
         book.render_to = None
         book.save()
-    return JsonResponse({'success': 'Book marked as available'})
+
+        return JsonResponse({'success': 'Book marked as available'})
+
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
   
 
 
@@ -160,3 +182,8 @@ def search_books(request):
             })
 
     return JsonResponse({'results': results})
+
+def view_penalties(request):
+    # Only unpaid penalties
+    penalties = Penalty.objects.select_related('student', 'book').filter(paid=False).order_by('-issued_at')
+    return render(request, 'librarian/view_penalties.html', {'penalties': penalties})

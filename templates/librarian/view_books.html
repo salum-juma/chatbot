@@ -204,7 +204,7 @@
 
     document.getElementById('regNumber').addEventListener('blur', function () {
       const regNumber = this.value;
-      fetch(`/get-student-info/?reg_number=${regNumber}`)
+      fetch(`/librarian/get-student-info/?reg_number=${regNumber}`)
         .then(res => res.json())
         .then(data => {
           if (data.name) {
@@ -223,7 +223,7 @@
       const bookId = document.getElementById('renderBookId').value;
       const formData = new FormData(this);
 
-      fetch(`/books/${bookId}/render/`, {
+      fetch(`/librarian/books/${bookId}/render/`, {
         method: 'POST',
         body: formData
       })
@@ -266,26 +266,27 @@ document.querySelectorAll('.render-button').forEach(button => {
 });
 
   // Handle set to available submit
-  document.getElementById('makeAvailableForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const bookId = document.getElementById('modalBookId').value;
-    fetch(`/books/${bookId}/set_available/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': '{{ csrf_token }}',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({})
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        location.reload();
-      } else {
-        alert(data.error || 'Error');
-      }
-    });
+document.getElementById('makeAvailableForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  const bookId = document.getElementById('modalBookId').value;
+  fetch(`/books/${bookId}/set_available/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': '{{ csrf_token }}',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({})
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      location.reload();
+    } else {
+      alert(data.error || 'Error');
+    }
   });
+});
+
 </script>
 
 </body>

@@ -51,6 +51,7 @@ if RENDER_EXTERNAL_HOSTNAME:
 # Application definition
 
 INSTALLED_APPS = [
+    'django.contrib.humanize',
     'widget_tweaks',
     'jazzmin',
     'admin_material.apps.AdminMaterialDashboardConfig',

@@ -19,8 +19,11 @@ urlpatterns = [
     path('librarian/books/<int:book_id>/toggle-status/', librarian.toggle_status, name='toggle_status'),
     path('librarian/books/<int:book_id>/delete/', librarian.delete_book, name='delete_book'),
     path('librarian/books/<int:book_id>/render/', librarian.render_book, name='render_book'),
-    path('librarian/books/<int:book_id>/set_available/', librarian.set_book_available, name='set_book_available'),
+    path('books/<int:book_id>/set_available/', librarian.set_book_available, name='set_book_available'),
     path('librarian/get-student-info/', views.get_student_info, name='get_student_info'),  # if this remains in views
+    path('librarian/penalties/', librarian.view_penalties, name='view_penalties'),
+
+
 
     # Suggestions
     path('suggestions/', views.suggestion_page, name='suggestion_page'),

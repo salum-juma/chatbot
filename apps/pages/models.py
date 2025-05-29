@@ -107,7 +107,14 @@ class Suggestion(models.Model):
         return f"Suggestion #{self.id} ({self.get_suggestion_type_display()})"
 
 
-
+class Penalty(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    days_late = models.PositiveIntegerField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    paid = models.BooleanField(default=False)
+    issued_at = models.DateTimeField(auto_now_add=True)
+    
 
 # Create your models here.
 

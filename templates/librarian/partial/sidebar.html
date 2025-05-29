@@ -15,6 +15,7 @@
       </a>
     </li>
 
+
     <!-- View All Books Link -->
     <li class="nav-item">
       <a class="nav-link {% if request.resolver_match.url_name == 'view_books' %}active{% endif %}" href="{% url 'view_books' %}">
@@ -22,6 +23,13 @@
       </a>
     </li>
 
+        <!-- View Penalties Link -->
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'view_penalties' %}active{% endif %}" href="{% url 'view_penalties' %}">
+        <i class="fas fa-exclamation-triangle"></i> View Penalties
+      </a>
+    </li>
+    
     <!-- Logout Link -->
     <li class="nav-item">
       <a class="nav-link text-white" href="{% url 'logout' %}">
