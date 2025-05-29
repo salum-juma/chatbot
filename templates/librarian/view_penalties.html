@@ -73,11 +73,11 @@
     <td>{{ penalty.student.reg_number }}</td>
     <td>{{ penalty.book.title }}</td>
     <td>{{ penalty.book.render_to }}</td>
-    <td>{{ penalty.issued_at|date:"Y-m-d" }}</td>
+    <td>{{ penalty.created_at|date:"Y-m-d" }}</td>
     <td>{{ penalty.days_late }}</td>
     <td>{{ penalty.amount|intcomma }}</td>
     <td>
-      {% if penalty.paid %}
+      {% if penalty.status == 'Paid' %}
         <span class="badge bg-success">Paid</span>
       {% else %}
         <span class="badge bg-danger">Unpaid</span>

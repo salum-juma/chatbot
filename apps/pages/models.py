@@ -108,12 +108,21 @@ class Suggestion(models.Model):
 
 
 class Penalty(models.Model):
+    STATUS_CHOICES = [
+        ('Unpaid', 'Unpaid'),
+        ('Paid', 'Paid'),
+    ]
+
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
-    days_late = models.PositiveIntegerField()
+    days_late = models.IntegerField()
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    paid = models.BooleanField(default=False)
-    issued_at = models.DateTimeField(auto_now_add=True)
+    reason = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Unpaid')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.student} - {self.book} - {self.status}"
     
 
 # Create your models here.

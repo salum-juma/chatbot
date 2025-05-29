@@ -16,7 +16,6 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, HttpResponseNotAllowed
 from datetime import date
 from django.shortcuts import get_object_or_404
-from django.http import JsonResponse
 from .models import Book, Penalty  
 
 def librarian_home(request):
@@ -106,19 +105,33 @@ def set_book_available(request, book_id):
     if request.method == 'POST':
         book = get_object_or_404(Book, id=book_id)
 
-        # Check if the book is overdue
+        # Check overdue condition
         if book.render_to and date.today() > book.render_to:
             overdue_days = (date.today() - book.render_to).days
-            penalty_amount = overdue_days * 500  # 500 TZS per day
+            penalty_amount = overdue_days * 500
 
-            # Create a penalty
-            if book.rendered_to:  # ensure student is attached
-                Penalty.objects.create(
+            if book.rendered_to:
+                # Check if penalty exists
+                existing_penalty = Penalty.objects.filter(
                     student=book.rendered_to,
                     book=book,
-                    amount=penalty_amount,
-                    reason=f"Returned {overdue_days} day(s) late"
-                )
+                    status='Unpaid'
+                ).first()
+
+                if existing_penalty:
+                    # Mark the penalty as paid
+                    existing_penalty.status = 'Paid'
+                    existing_penalty.save()
+                else:
+                    # Create a new unpaid penalty
+                    Penalty.objects.create(
+                        student=book.rendered_to,
+                        book=book,
+                        days_late=overdue_days,
+                        amount=penalty_amount,
+                        reason=f"Returned {overdue_days} day(s) late",
+                        status='Unpaid'
+                    )
 
         # Reset book fields
         book.status = 'Available'
@@ -130,8 +143,6 @@ def set_book_available(request, book_id):
         return JsonResponse({'success': 'Book marked as available'})
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
-
-  
 
 
 @csrf_exempt
@@ -185,5 +196,6 @@ def search_books(request):
 
 def view_penalties(request):
     # Only unpaid penalties
-    penalties = Penalty.objects.select_related('student', 'book').filter(paid=False).order_by('-issued_at')
+    penalties = Penalty.objects.select_related('student', 'book').order_by('-created_at')
     return render(request, 'librarian/view_penalties.html', {'penalties': penalties})
+
