@@ -239,13 +239,15 @@
 
   </script>
   <script>
+const renderDetailsModalEl = document.getElementById('renderDetailsModal');
+const renderDetailsModal = new bootstrap.Modal(renderDetailsModalEl);
+
 document.querySelectorAll('.render-button').forEach(button => {
   button.addEventListener('click', () => {
     const status = button.textContent.trim();
     const bookId = button.dataset.bookId;
 
     if (status === 'Rendered') {
-      // Populate and show the "Rendered Details" modal
       document.getElementById('modalBookTitle').textContent = button.dataset.bookTitle;
       document.getElementById('modalRenderedTo').textContent = button.dataset.renderedTo;
       document.getElementById('modalRegNumber').textContent = button.dataset.regNumber;
@@ -253,9 +255,8 @@ document.querySelectorAll('.render-button').forEach(button => {
       document.getElementById('modalRenderTo').textContent = button.dataset.renderTo;
       document.getElementById('modalBookId').value = bookId;
 
-      new bootstrap.Modal(document.getElementById('renderDetailsModal')).show();
+      renderDetailsModal.show();
     } else if (status === 'Available') {
-      // Reset and show the "Render Book" modal
       document.getElementById('renderForm').reset();
       document.getElementById('renderBookId').value = bookId;
 
