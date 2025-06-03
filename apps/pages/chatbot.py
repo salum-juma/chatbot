@@ -31,7 +31,7 @@ def whatsapp_webhook(request):
 
             from_number = message.get("from")
             phone_number_id = value.get("metadata", {}).get("phone_number_id")
-            access_token = "EAAOvQZB8KEQ4BOxNL1opTcMuL7O83iQGzQif96K5RbZCNPeFMJho3eYeP1c7Xhc2F85RhbMRb68Nzs6G6ai4LBr3bFyLJHXBmvD7qLmBXZA046IEf73UeRmbrzZARbI7SXD3wZBXYMTOVeTIt1eAN1sgbg7LE1H4W8Ig0uppXSXATKZCZCrjxRzkKELTWu34utQKqXMsWIhZB6JgRW8VooUhPyH4lPoHiZBD8iZCkZD"
+            access_token = "EAAOvQZB8KEQ4BO5jZBj0iDHS7zAF2xcpsXISidHaaD4wN9HaGNGs6gqvXiJV9DDdTb1jhtX75ZAZCSXvb95FM87S5qNZC7fP5bsR4gZANWYZAn2eZBQP8tHvyVb3Wc9aeyctaWadOcTVxatzJUpkbvdRQhGdRuffc4Oil9tqidKBdYLdhyXpug4hZCfW7lmHJKqR4Xa4x9a3JDG58hEK97XwsaUuAD26XxmeRBGIZD"
 
             if text in ['hi', 'hello', 'start', 'hey']:
                 send_language_selection(phone_number_id, from_number, access_token)
