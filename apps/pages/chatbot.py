@@ -1,19 +1,23 @@
 from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
 from django.http import JsonResponse
 import json
 
 @csrf_exempt
 def whatsapp_webhook(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        user_message = data.get('message')  # Depends on your provider's payload
+    if request.method == 'GET':
+        # Meta webhook verification
+        verify_token = 'developernkya'
+        if request.GET.get('hub.verify_token') == verify_token:
+            return HttpResponse(request.GET.get('hub.challenge'))
+        return HttpResponse("Invalid verification token", status=403)
 
-        # Call your chatbot logic
-        reply = chatbot_response(user_message)
+    elif request.method == 'POST':
+        # Here you handle incoming messages
+        # This will be covered in the next step
+        return HttpResponse("Message received")
 
-        # Return response in WhatsApp-compatible format
-        return JsonResponse({"reply": reply})
-    return JsonResponse({"error": "Invalid method"}, status=400)
+    return HttpResponse("Invalid request", status=400)
 
 
 def chatbot_response(message):
