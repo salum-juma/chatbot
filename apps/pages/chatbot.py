@@ -35,6 +35,12 @@ def whatsapp_webhook(request):
 
             if text in ['hi', 'hello', 'start', 'hey']:
                 send_language_selection(phone_number_id, from_number, access_token)
+            elif text == "lang_english":
+                send_group_selection_list(phone_number_id, from_number, access_token)
+
+            elif text == "lang_swahili":
+                send_whatsapp_message(phone_number_id, from_number, "Karibu! (Swahili responses coming soon)", access_token)
+
             else:
                 reply = chatbot_response(text)
                 send_whatsapp_message(phone_number_id, from_number, reply, access_token)
@@ -42,6 +48,62 @@ def whatsapp_webhook(request):
         return HttpResponse("Message processed", status=200)
 
     return HttpResponse("Invalid request", status=400)
+
+
+def send_group_selection_list(phone_number_id, to, token):
+    url = f"https://graph.facebook.com/v19.0/{phone_number_id}/messages"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "messaging_product": "whatsapp",
+        "to": to,
+        "type": "interactive",
+        "interactive": {
+            "type": "list",
+            "header": {
+                "type": "text",
+                "text": "Group Selection"
+            },
+            "body": {
+                "text": "Great! To serve you better, please select the group you belong to:"
+            },
+            "footer": {
+                "text": "AskJo - St. Joseph University"
+            },
+            "action": {
+                "button": "Select Here",
+                "sections": [
+                    {
+                        "title": "Choose One",
+                        "rows": [
+                            {
+                                "id": "prospectives",
+                                "title": "Prospectives",
+                                "description": "Learn about our programs & admission process"
+                            },
+                            {
+                                "id": "current_student",
+                                "title": "Current Student",
+                                "description": "Access our services, announcements & support"
+                            },
+                            {
+                                "id": "suggestion_box",
+                                "title": "Suggestion Box",
+                                "description": "General inquiries or anonymous suggestions."
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+    print("List message response:", response.status_code, response.json())
+    return response.json()
 
 
 def chatbot_response(message):
