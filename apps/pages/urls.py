@@ -1,5 +1,5 @@
 from django.urls import path
-from . import super_admin, student, views, librarian
+from . import super_admin, student, views, librarian,chatbot
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -32,4 +32,9 @@ urlpatterns = [
     # Super admin routes
     path('add-user-page', super_admin.add_user_page, name='add_user_page'),
     path('super_admin/view-users/', super_admin.view_all_users, name='view_all_users'),
-]
+
+
+    # whatsapp
+    path('webhook/', chatbot.whatsapp_webhook, name='whatsapp_webhook'),
+    
+        ]
