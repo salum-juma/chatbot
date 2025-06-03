@@ -23,9 +23,12 @@ def whatsapp_webhook(request):
 
             # Handle both button replies and text
             text = ""
+            interactive = message.get("interactive", {})
             button_reply = message.get("interactive", {}).get("button_reply", {})
             if button_reply:
                 text = button_reply.get("id", "").lower()
+            elif "list_reply" in interactive:
+                text = interactive["list_reply"].get("id", "").lower()
             else:
                 text = message.get("text", {}).get("body", "").lower()
 
@@ -40,6 +43,15 @@ def whatsapp_webhook(request):
 
             elif text == "lang_swahili":
                 send_whatsapp_message(phone_number_id, from_number, "Karibu! (Swahili responses coming soon)", access_token)
+
+            elif text == "prospectives":
+                send_whatsapp_message(phone_number_id, from_number, "You selected *Prospectives*. Here's what you need to know about admissions and programs.", access_token)
+
+            elif text == "current_student":
+                send_whatsapp_message(phone_number_id, from_number, "Welcome *Current Student*! You can now access services, support, and announcements.", access_token)
+
+            elif text == "suggestion_box":
+                send_whatsapp_message(phone_number_id, from_number, "You selected the *Suggestion Box*. Feel free to share your ideas or concerns.", access_token)
 
             else:
                 reply = chatbot_response(text)
