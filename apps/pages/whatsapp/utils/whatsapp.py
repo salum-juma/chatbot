@@ -143,3 +143,36 @@ def send_whatsapp_button_message(phone_number_id, to, body, buttons):
 
     response = requests.post(url, headers=headers, json=payload)
     print("Button message sent:", response.text)
+
+
+def send_whatsapp_list_message(phone_number_id, to, body, sections):
+    url = f"https://graph.facebook.com/v18.0/{phone_number_id}/messages"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": to,
+        "type": "interactive",
+        "interactive": {
+            "type": "list",
+            "header": {
+                "type": "text",
+                "text": "🎓 Student Portal"
+            },
+            "body": {
+                "text": body
+            },
+            "footer": {
+                "text": "Choose one option below 👇"
+            },
+            "action": {
+                "button": "View Services",
+                "sections": sections
+            }
+        }
+    }
+
+    requests.post(url, headers=headers, json=payload)
