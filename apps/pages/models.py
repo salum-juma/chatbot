@@ -86,6 +86,13 @@ class Book(models.Model):
     render_to = models.DateField(null=True, blank=True)
     def __str__(self):
         return self.title
+    
+    @property
+    def shelf_location(self):
+        if self.row_number and self.rack_position:
+            return f"Row {self.row_number}, Rack {self.rack_position}"
+        return "Not available"
+
 
 
 
