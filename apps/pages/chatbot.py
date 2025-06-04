@@ -78,7 +78,6 @@ def whatsapp_webhook(request):
                 return HttpResponse("Awaiting password", status=200)
 
             elif session.stage == 'awaiting_password':
-                # Attempt login using reg_number as username
                 user = authenticate(username=session.reg_number, password=text)
 
                 if user is not None:
@@ -89,15 +88,46 @@ def whatsapp_webhook(request):
                     send_whatsapp_message(phone_number_id, from_number, "✅ Logged in successfully.")
                     return HttpResponse("Authenticated", status=200)
                 else:
-                    session.stage = 'awaiting_reg_number'  # reset flow
+                    session.stage = 'awaiting_password_retry'
+                    session.save()
+                    send_whatsapp_message(
+                        phone_number_id,
+                        from_number,
+                        "❌ Invalid credentials.\n\nPlease choose an option:\n"
+                        "1️⃣ Type *retry* to enter your password again\n"
+                        "2️⃣ Type *start over* to enter a new registration number"
+                    )
+                    return HttpResponse("Invalid credentials", status=401)
+
+            elif session.stage == 'awaiting_password_retry':
+                if text == 'retry':
+                    session.stage = 'awaiting_password'
+                    session.save()
+                    send_whatsapp_message(
+                        phone_number_id,
+                        from_number,
+                        "Please enter your Vcampus password again."
+                    )
+                    return HttpResponse("Retrying password", status=200)
+
+                elif text == 'start over':
+                    session.stage = 'awaiting_reg_number'
                     session.reg_number = None
                     session.save()
                     send_whatsapp_message(
                         phone_number_id,
                         from_number,
-                        "❌ Invalid credentials. Please enter your registration number again."
+                        "🔄 Okay, let's start over. Please enter your registration number again."
                     )
-                    return HttpResponse("Invalid credentials", status=401)
+                    return HttpResponse("Restarting registration", status=200)
+
+                else:
+                    send_whatsapp_message(
+                        phone_number_id,
+                        from_number,
+                        "❗ Invalid choice.\nType *retry* to enter your password again or *start over* to use a new registration number."
+                    )
+                    return HttpResponse("Invalid choice after failed login", status=200)
 
             else:
                 reply = "Sorry, I didn’t understand that. Please type 'hello' to begin or 'cancel' to exit."
