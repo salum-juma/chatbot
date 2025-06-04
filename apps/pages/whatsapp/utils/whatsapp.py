@@ -124,7 +124,7 @@ def send_whatsapp_message(phone_number_id, to, message):
 def send_whatsapp_button_message(phone_number_id, to, body, buttons):
     url = f"https://graph.facebook.com/v17.0/{phone_number_id}/messages"
     headers = {
-        "Authorization": f"Bearer {os.getenv('WHATSAPP_TOKEN')}",
+        "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json"
     }
 
