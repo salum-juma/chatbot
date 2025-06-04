@@ -13,20 +13,29 @@ def whatsapp_webhook(request):
         if request.GET.get('hub.verify_token') == verify_token:
             return HttpResponse(request.GET.get('hub.challenge'))
         return HttpResponse("Invalid verification token", status=403)
-
+    
     if request.method == 'POST':
-        data = json.loads(request.body.decode('utf-8'))
         try:
-            message = data["entry"][0]["changes"][0]["value"]["messages"][0]
-            from_number = message["from"]
-            phone_number_id = data["entry"][0]["changes"][0]["value"]["metadata"]["phone_number_id"]
+            data = json.loads(request.body.decode('utf-8'))
+            entry = data.get("entry", [])[0]
+            changes = entry.get("changes", [])[0]
+            value = changes.get("value", {})
 
-            # Get the text or button reply
-            text = ""
+            # Safely handle missing or empty messages
+            messages = value.get("messages", [])
+            if not messages:
+                print("No messages in webhook payload:", json.dumps(data, indent=2))
+                return HttpResponse("No messages to process", status=200)
+
+            message = messages[0]
+            from_number = message.get("from")
+            phone_number_id = value.get("metadata", {}).get("phone_number_id")
+
+            # Extract text/button/list ID
             interactive = message.get("interactive", {})
-            button_reply = interactive.get("button_reply", {})
-            if button_reply:
-                text = button_reply.get("id", "").lower()
+            text = ""
+            if "button_reply" in interactive:
+                text = interactive["button_reply"].get("id", "").lower()
             elif "list_reply" in interactive:
                 text = interactive["list_reply"].get("id", "").lower()
             else:
@@ -53,3 +62,4 @@ def whatsapp_webhook(request):
             return HttpResponse("Error", status=500)
 
     return HttpResponse("Invalid request", status=400)
+
