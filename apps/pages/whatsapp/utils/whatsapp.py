@@ -1,9 +1,11 @@
 import requests
 
-def send_group_selection_list(phone_number_id, to, token):
+access_token = "EAAOvQZB8KEQ4BOxaSsxWyfZBZCk07eYryj4MTpsxKraHwdmD7hHC8n9TpWbsu5s3k5Q9zUUvfZAG4pT4xH1ZCyZBzjb5YE5Ngczp0E6fOXm8LwRuzZCfoN42LgmwZCtXfxNlwxbXZAWlonKa2IKePHasTvzhNtUtZAU6K99yCWJKkRWqVDIymJ3xi96OKVo81sJmGCVqWVkAQL4YtHNTUJqUejZCdIjoUmdREWTyygZD"
+
+def send_group_selection_list(phone_number_id, to):
     url = f"https://graph.facebook.com/v19.0/{phone_number_id}/messages"
     headers = {
-        "Authorization": f"Bearer {token}",
+        "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json"
     }
 
@@ -56,10 +58,10 @@ def send_group_selection_list(phone_number_id, to, token):
     return response.json()
 
 
-def send_language_selection(phone_number_id, to, token):
+def send_language_selection(phone_number_id, to):
     url = f"https://graph.facebook.com/v19.0/{phone_number_id}/messages"
     headers = {
-        "Authorization": f"Bearer {token}",
+        "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json"
     }
 
@@ -99,10 +101,10 @@ def send_language_selection(phone_number_id, to, token):
 
 
 
-def send_whatsapp_message(phone_number_id, to, message, token):
+def send_whatsapp_message(phone_number_id, to, message):
     url = f"https://graph.facebook.com/v19.0/{phone_number_id}/messages"
     headers = {
-        "Authorization": f"Bearer {token}",
+        "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json"
     }
 
