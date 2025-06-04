@@ -126,9 +126,14 @@ class Penalty(models.Model):
 
 class ChatSession(models.Model):
     phone_number = models.CharField(max_length=20, unique=True)
-    state = models.CharField(max_length=50)  # e.g., awaiting_registration, awaiting_password, verified
-    registration_number = models.CharField(max_length=50, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)  
+    stage = models.CharField(max_length=50, default='initial')  # Track conversation stage
+    reg_number = models.CharField(max_length=50, blank=True, null=True)
+    password = models.CharField(max_length=100, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.phone_number
 
 # Create your models here.
 
