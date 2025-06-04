@@ -7,6 +7,8 @@ from apps.pages.whatsapp.handlers.language_handler import handle_language_select
 from apps.pages.whatsapp.handlers.english_handler import handle_english_flow
 from apps.pages.whatsapp.handlers.swahili_handler import handle_swahili_flow
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message, send_whatsapp_list_message
+from apps.pages.whatsapp.handlers.library_handler import handle_library_flow
+
 
 @csrf_exempt
 def whatsapp_webhook(request):
@@ -25,10 +27,10 @@ def whatsapp_webhook(request):
             messages = value.get("messages", [])
 
             if not messages:
-                return HttpResponse("No messages to process", status=200)
+                return HttpResponse("No messages", status=200)
 
             message = messages[0]
-            from_number = message.get("from")
+            from_number = message["from"]
             phone_number_id = value.get("metadata", {}).get("phone_number_id")
 
             interactive = message.get("interactive", {})
@@ -43,170 +45,111 @@ def whatsapp_webhook(request):
 
             session, _ = ChatSession.objects.get_or_create(phone_number=from_number)
 
-            # Start flow
             if text in ['hi', 'hello', 'start', 'hey']:
                 return handle_language_selection(phone_number_id, from_number)
 
-            elif text.startswith("lang_english") or text in ['prospectives', 'suggestion_box']:
+            if text.startswith("lang_english") or text in ['prospectives', 'suggestion_box']:
                 return handle_english_flow(text, phone_number_id, from_number)
 
-            elif text.startswith("lang_swahili"):
+            if text.startswith("lang_swahili"):
                 return handle_swahili_flow(text, phone_number_id, from_number)
 
-            elif text == 'current_student':
+            if text == 'current_student':
                 session.stage = 'awaiting_reg_number'
                 session.save()
                 send_whatsapp_message(
-                    phone_number_id,
-                    from_number,
-                    "Hello! 👋 Welcome to AskJo, your smart assistant for St. Joseph University.\n\nPlease enter your registration number to continue."
+                    phone_number_id, from_number,
+                    "👋 Welcome to AskJo! Please enter your registration number."
                 )
-                return HttpResponse("Awaiting registration number", status=200)
+                return HttpResponse("Awaiting reg number", status=200)
 
-            elif session.stage == 'awaiting_reg_number':
+            if session.stage == 'awaiting_reg_number':
                 session.reg_number = text
                 session.stage = 'awaiting_password'
                 session.save()
                 send_whatsapp_message(
-                    phone_number_id,
-                    from_number,
-                    "Please enter your Vcampus password to confirm your identity.\n\n(Tafadhali weka nenosiri lako la Vcampus ili kuthibitisha utambulisho wako)"
+                    phone_number_id, from_number,
+                    "🔐 Enter your Vcampus password to confirm your identity."
                 )
                 return HttpResponse("Awaiting password", status=200)
 
-            elif session.stage == 'awaiting_password':
+            if session.stage == 'awaiting_password':
                 user = authenticate(username=session.reg_number, password=text)
-                if user is not None:
+                if user:
                     session.stage = 'student_portal_main'
                     session.save()
 
-                    # Prepare list message with descriptions
-                    sections = [
-                        {
-                            "title": "📚 Student Services",
-                            "rows": [
-                                {
-                                    "id": "student_announcements",
-                                    "title": "📢 Announcements",
-                                    "description": "Be updated on current news/events."
-                                },
-                                {
-                                    "id": "student_library",
-                                    "title": "📚 Library Management",
-                                    "description": "Search and find books easily."
-                                },
-                                {
-                                    "id": "student_inquiries",
-                                    "title": "❓ Student Inquiries",
-                                    "description": "View answers to common questions."
-                                },
-                                {
-                                    "id": "student_guidelines",
-                                    "title": "📖 Guidelines",
-                                    "description": "Steps for various university processes."
-                                },
-                                {
-                                    "id": "student_cafeteria",
-                                    "title": "🍽️ Cafeteria",
-                                    "description": "Order from the university restaurant."
-                                },
-                                {
-                                    "id": "back_to_main_menu",
-                                    "title": "🔙 Rudi Menyu Kuu",
-                                    "description": "Return to the main menu."
-                                }
-                            ]
-                        }
-                    ]
-
+                    sections = [{
+                        "title": "📚 Student Services",
+                        "rows": [
+                            {"id": "student_announcements", "title": "📢 Announcements", "description": "Be updated on current news/events."},
+                            {"id": "student_library", "title": "📚 Library Management", "description": "Search and find books easily."},
+                            {"id": "student_inquiries", "title": "❓ Student Inquiries", "description": "View answers to common questions."},
+                            {"id": "student_guidelines", "title": "📖 Guidelines", "description": "Steps for various university processes."},
+                            {"id": "student_cafeteria", "title": "🍽️ Cafeteria", "description": "Order from the university restaurant."},
+                            {"id": "back_to_main_menu", "title": "🔙 Rudi Menyu Kuu", "description": "Return to the main menu."}
+                        ]
+                    }]
                     send_whatsapp_list_message(
-                        phone_number_id,
-                        from_number,
+                        phone_number_id, from_number,
                         body="🎓 *Welcome to Student Portal!*\n\nPlease select a service to continue:",
                         sections=sections
                     )
-                    return HttpResponse("Student portal options sent", status=200)
-
+                    return HttpResponse("Options sent", status=200)
                 else:
                     session.stage = 'awaiting_password_retry'
                     session.save()
                     send_whatsapp_message(
-                        phone_number_id,
-                        from_number,
-                        "❌ Invalid credentials.\n\nPlease choose:\n"
-                        "1️⃣ Type *retry* to enter your password again\n"
-                        "2️⃣ Type *start over* to enter a new registration number"
+                        phone_number_id, from_number,
+                        "❌ Invalid login.\nType *retry* to try again or *start over*."
                     )
-                    return HttpResponse("Invalid credentials", status=401)
+                    return HttpResponse("Invalid login", status=401)
 
-            elif session.stage == 'awaiting_password_retry':
+            if session.stage == 'awaiting_password_retry':
                 if text == 'retry':
                     session.stage = 'awaiting_password'
                     session.save()
-                    send_whatsapp_message(
-                        phone_number_id,
-                        from_number,
-                        "Please enter your Vcampus password again."
-                    )
-                    return HttpResponse("Retrying password", status=200)
-
+                    send_whatsapp_message(phone_number_id, from_number, "🔁 Please enter your password again.")
+                    return HttpResponse("Retrying", status=200)
                 elif text == 'start over':
                     session.stage = 'awaiting_reg_number'
                     session.reg_number = None
                     session.save()
-                    send_whatsapp_message(
-                        phone_number_id,
-                        from_number,
-                        "🔄 Let's start over. Please enter your registration number again."
-                    )
-                    return HttpResponse("Restarting registration", status=200)
+                    send_whatsapp_message(phone_number_id, from_number, "🔁 Please enter your registration number again.")
+                    return HttpResponse("Restarting", status=200)
 
-                else:
-                    send_whatsapp_message(
-                        phone_number_id,
-                        from_number,
-                        "❗ Invalid choice.\nType *retry* to enter your password again or *start over* to use a new registration number."
-                    )
-                    return HttpResponse("Invalid choice", status=200)
-                
-            elif session.stage == 'student_portal_main':
+            # Main Menu Options
+            if session.stage == 'student_portal_main':
                 if text == "student_announcements":
-                    send_whatsapp_message(phone_number_id, from_number, "📢 Here are the latest announcements...")
+                    send_whatsapp_message(phone_number_id, from_number, "📢 Latest announcements coming soon...")
                     return HttpResponse("Sent announcements", status=200)
 
                 if text == "student_library":
-                    send_whatsapp_message(
-                        phone_number_id,
-                        from_number,
-                        "📚 *Welcome To SJUT Library Management System!*\n\nPlease click the link below to continue:\n\n🔗 https://django-material-dash2-latest-dsh3.onrender.com/home"
-                    )
-                    return HttpResponse("Sent library link", status=200)
+                    return handle_library_flow(text, phone_number_id, from_number, session)
 
-                elif text == "student_inquiries":
-                    send_whatsapp_message(phone_number_id, from_number, "❓ FAQ and common student questions go here.")
-                    return HttpResponse("Sent FAQ", status=200)
+                if text == "student_inquiries":
+                    send_whatsapp_message(phone_number_id, from_number, "❓ FAQ and common questions.")
+                    return HttpResponse("Sent inquiries", status=200)
 
-                elif text == "student_guidelines":
-                    send_whatsapp_message(phone_number_id, from_number, "📖 Guidelines for university processes.")
+                if text == "student_guidelines":
+                    send_whatsapp_message(phone_number_id, from_number, "📖 University processes guidelines.")
                     return HttpResponse("Sent guidelines", status=200)
 
-                elif text == "student_cafeteria":
-                    send_whatsapp_message(phone_number_id, from_number, "🍽️ View and order from the cafeteria menu.")
-                    return HttpResponse("Sent cafeteria info", status=200)
+                if text == "student_cafeteria":
+                    send_whatsapp_message(phone_number_id, from_number, "🍽️ Order cafeteria meals here.")
+                    return HttpResponse("Sent cafeteria", status=200)
 
-                elif text == "back_to_main_menu":
-                    session.stage = 'student_portal_main'
-                    session.save()
-                    send_whatsapp_message(phone_number_id, from_number, "🔙 You're now at the main menu.")
+                if text == "back_to_main_menu":
+                    send_whatsapp_message(phone_number_id, from_number, "🔙 Back to the main menu.")
                     return HttpResponse("Returned to main menu", status=200)
 
-                else:
-                    send_whatsapp_message(phone_number_id, from_number, "❓ Unknown command. Please select from the list.")
-                    return HttpResponse("Unknown student_portal_main command", status=200)
+            # Library search after entry
+            if session.stage == "library_search":
+                return handle_library_flow(text, phone_number_id, from_number, session)
 
-            else:
-                send_whatsapp_message(phone_number_id, from_number, "🤖 Sorry, I didn’t understand that. Please type *hello* to begin or *cancel* to exit.")
-                return HttpResponse("Unknown command", status=200)
+            # Fallback
+            send_whatsapp_message(phone_number_id, from_number, "🤖 Unrecognized input. Type *hello* to start.")
+            return HttpResponse("Unknown input", status=200)
 
         except Exception as e:
             print("Webhook error:", str(e))
