@@ -168,23 +168,38 @@ def whatsapp_webhook(request):
                         "❗ Invalid choice.\nType *retry* to enter your password again or *start over* to use a new registration number."
                     )
                     return HttpResponse("Invalid choice", status=200)
-
+                
             elif session.stage == 'student_portal_main':
-                # Respond to list reply selections
                 if text == "student_announcements":
                     send_whatsapp_message(phone_number_id, from_number, "📢 Here are the latest announcements...")
-                elif text == "student_library":
-                    send_whatsapp_message(phone_number_id, from_number, "📚 Library services will be available soon.")
+                    return HttpResponse("Sent announcements", status=200)
+
+                if text == "student_library":
+                    send_whatsapp_message(
+                        phone_number_id,
+                        from_number,
+                        "📚 *Welcome To SJUT Library Management System!*\n\nPlease click the link below to continue:\n\n🔗 https://django-material-dash2-latest-dsh3.onrender.com/home"
+                    )
+                    return HttpResponse("Sent library link", status=200)
+
                 elif text == "student_inquiries":
                     send_whatsapp_message(phone_number_id, from_number, "❓ FAQ and common student questions go here.")
+                    return HttpResponse("Sent FAQ", status=200)
+
                 elif text == "student_guidelines":
                     send_whatsapp_message(phone_number_id, from_number, "📖 Guidelines for university processes.")
+                    return HttpResponse("Sent guidelines", status=200)
+
                 elif text == "student_cafeteria":
                     send_whatsapp_message(phone_number_id, from_number, "🍽️ View and order from the cafeteria menu.")
+                    return HttpResponse("Sent cafeteria info", status=200)
+
                 elif text == "back_to_main_menu":
                     session.stage = 'student_portal_main'
                     session.save()
                     send_whatsapp_message(phone_number_id, from_number, "🔙 You're now at the main menu.")
+                    return HttpResponse("Returned to main menu", status=200)
+
                 else:
                     send_whatsapp_message(phone_number_id, from_number, "❓ Unknown command. Please select from the list.")
                     return HttpResponse("Unknown student_portal_main command", status=200)
