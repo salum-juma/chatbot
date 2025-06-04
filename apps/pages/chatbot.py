@@ -6,7 +6,7 @@ from apps.pages.whatsapp.handlers.language_handler import handle_language_select
 from apps.pages.whatsapp.handlers.english_handler import handle_english_flow
 from apps.pages.whatsapp.handlers.swahili_handler import handle_swahili_flow
 from django.contrib.auth import authenticate
-from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
+from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message, send_whatsapp_button_message
 
 
 @csrf_exempt
@@ -32,6 +32,7 @@ def whatsapp_webhook(request):
             message = messages[0]
             from_number = message.get("from")
             phone_number_id = value.get("metadata", {}).get("phone_number_id")
+            button_reply_id = message.get("interactive", {}).get("button_reply", {}).get("id")
 
             # Retrieve or create chat session
             session, _ = ChatSession.objects.get_or_create(phone_number=from_number)
@@ -46,7 +47,7 @@ def whatsapp_webhook(request):
             else:
                 text = message.get("text", {}).get("body", "").lower()
 
-            # Delegate based on current session state
+            # ─── Language & Start ─────────────────────────────────────────────
             if text in ['hi', 'hello', 'start', 'hey']:
                 return handle_language_selection(phone_number_id, from_number)
 
@@ -56,6 +57,7 @@ def whatsapp_webhook(request):
             elif text.startswith("lang_swahili"):
                 return handle_swahili_flow(text, phone_number_id, from_number)
 
+            # ─── Current Student Path ─────────────────────────────────────────
             elif text == 'current_student':
                 session.stage = 'awaiting_reg_number'
                 session.save()
@@ -79,14 +81,21 @@ def whatsapp_webhook(request):
 
             elif session.stage == 'awaiting_password':
                 user = authenticate(username=session.reg_number, password=text)
-
                 if user is not None:
-                    session.password = text
-                    session.stage = 'authenticated'
+                    session.stage = 'student_portal_main'
                     session.save()
 
-                    send_whatsapp_message(phone_number_id, from_number, "✅ Logged in successfully.")
-                    return HttpResponse("Authenticated", status=200)
+                    send_whatsapp_button_message(
+                        phone_number_id,
+                        from_number,
+                        body="🎓 *Welcome to Student Portal!* 🤩\n\nPlease select a service to continue:",
+                        buttons=[
+                            {"type": "reply", "reply": {"id": "student_announcements", "title": "📢 Announcements"}},
+                            {"type": "reply", "reply": {"id": "student_library", "title": "📚 Library"}},
+                            {"type": "reply", "reply": {"id": "student_guidelines", "title": "📖 Guidelines"}},
+                        ]
+                    )
+                    return HttpResponse("Login success and student portal menu sent", status=200)
                 else:
                     session.stage = 'awaiting_password_retry'
                     session.save()
@@ -129,6 +138,25 @@ def whatsapp_webhook(request):
                     )
                     return HttpResponse("Invalid choice after failed login", status=200)
 
+            # ─── Student Portal Button Flow ────────────────────────────────────
+            elif session.stage == 'student_portal_main' and button_reply_id:
+                if button_reply_id == "student_announcements":
+                    send_whatsapp_message(phone_number_id, from_number, "📢 Latest Announcements...")
+                    return HttpResponse("Student announcement sent", status=200)
+
+                elif button_reply_id == "student_library":
+                    send_whatsapp_message(phone_number_id, from_number, "📚 Library access coming soon!")
+                    return HttpResponse("Student library sent", status=200)
+
+                elif button_reply_id == "student_guidelines":
+                    send_whatsapp_message(phone_number_id, from_number, "📖 Guidelines section under construction.")
+                    return HttpResponse("Student guidelines sent", status=200)
+
+                else:
+                    send_whatsapp_message(phone_number_id, from_number, "❓ Unknown option selected.")
+                    return HttpResponse("Unknown button ID", status=200)
+
+            # ─── Fallback ─────────────────────────────────────────────────────
             else:
                 reply = "Sorry, I didn’t understand that. Please type 'hello' to begin or 'cancel' to exit."
                 send_whatsapp_message(phone_number_id, from_number, reply)

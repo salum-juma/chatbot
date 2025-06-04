@@ -119,3 +119,27 @@ def send_whatsapp_message(phone_number_id, to, message):
     response = requests.post(url, headers=headers, json=data)
     print("Text message response:", response.status_code, response.json())
     return response.json()
+
+
+def send_whatsapp_button_message(phone_number_id, to, body, buttons):
+    url = f"https://graph.facebook.com/v17.0/{phone_number_id}/messages"
+    headers = {
+        "Authorization": f"Bearer {os.getenv('WHATSAPP_TOKEN')}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": to,
+        "type": "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {"text": body},
+            "action": {
+                "buttons": buttons
+            }
+        }
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
+    print("Button message sent:", response.text)
