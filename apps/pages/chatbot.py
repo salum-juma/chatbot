@@ -5,6 +5,8 @@ from apps.pages.models import ChatSession
 from apps.pages.whatsapp.handlers.language_handler import handle_language_selection
 from apps.pages.whatsapp.handlers.english_handler import handle_english_flow
 from apps.pages.whatsapp.handlers.swahili_handler import handle_swahili_flow
+from django.contrib.auth import authenticate
+from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
 
 
 @csrf_exempt
@@ -50,14 +52,13 @@ def whatsapp_webhook(request):
 
             elif text.startswith("lang_english") or text in ['prospectives', 'suggestion_box']:
                 return handle_english_flow(text, phone_number_id, from_number)
-            
+
             elif text.startswith("lang_swahili"):
                 return handle_swahili_flow(text, phone_number_id, from_number)
 
             elif text == 'current_student':
                 session.stage = 'awaiting_reg_number'
                 session.save()
-                from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
                 msg = (
                     "Hello! 👋 Welcome to AskJo, your smart assistant for St. Joseph University in Tanzania. "
                     "Please enter your registration number to continue."
@@ -69,7 +70,6 @@ def whatsapp_webhook(request):
                 session.reg_number = text
                 session.stage = 'awaiting_password'
                 session.save()
-                from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
                 msg = (
                     "Please enter your Vcampus password to confirm your identity.\n\n"
                     "(Tafadhali weka nenosiri lako la Vcampus ili kuthibitisha utambulisho wako)"
@@ -78,15 +78,28 @@ def whatsapp_webhook(request):
                 return HttpResponse("Awaiting password", status=200)
 
             elif session.stage == 'awaiting_password':
-                session.password = text
-                session.stage = 'authenticated'
-                session.save()
-                from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
-                send_whatsapp_message(phone_number_id, from_number, "✅ Logged in successfully.")
-                return HttpResponse("Authenticated", status=200)
+                # Attempt login using reg_number as username
+                user = authenticate(username=session.reg_number, password=text)
+
+                if user is not None:
+                    session.password = text
+                    session.stage = 'authenticated'
+                    session.save()
+
+                    send_whatsapp_message(phone_number_id, from_number, "✅ Logged in successfully.")
+                    return HttpResponse("Authenticated", status=200)
+                else:
+                    session.stage = 'awaiting_reg_number'  # reset flow
+                    session.reg_number = None
+                    session.save()
+                    send_whatsapp_message(
+                        phone_number_id,
+                        from_number,
+                        "❌ Invalid credentials. Please enter your registration number again."
+                    )
+                    return HttpResponse("Invalid credentials", status=401)
 
             else:
-                from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
                 reply = "Sorry, I didn’t understand that. Please type 'hello' to begin or 'cancel' to exit."
                 send_whatsapp_message(phone_number_id, from_number, reply)
                 return HttpResponse("Unknown command processed", status=200)
