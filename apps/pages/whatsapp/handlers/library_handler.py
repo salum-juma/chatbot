@@ -1,23 +1,22 @@
-
 from django.db.models import Q
 from django.http import HttpResponse
-from apps.pages.models import Book, ChatSession, Student
-from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message, send_whatsapp_list_message
-
-
-from django.db.models import Q
-from django.http import HttpResponse
-from django.contrib.auth.hashers import check_password
 from apps.pages.models import Book, ChatSession, Student
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message, send_whatsapp_list_message
 
 
 def handle_library_flow(text, phone_number_id, from_number, session):
+    # Handle initial entry to library menu
     if text == "student_library":
-        if not session.student:
+        try:
+            student = Student.objects.get(reg_number=session.reg_number)
+        except Student.DoesNotExist:
             session.stage = "awaiting_login"
             session.save()
-            send_whatsapp_message(phone_number_id, from_number, "🔐 Please log in first by sending: `REG1234 yourpassword`")
+            send_whatsapp_message(
+                phone_number_id,
+                from_number,
+                "🔐 Please log in first by sending: `REG1234 yourpassword`"
+            )
             return HttpResponse("Login required", status=200)
 
         session.stage = "library_menu"
@@ -25,6 +24,7 @@ def handle_library_flow(text, phone_number_id, from_number, session):
         send_library_menu(phone_number_id, from_number)
         return HttpResponse("Library menu sent", status=200)
 
+    # Library menu options
     if session.stage == "library_menu":
         if text == "library_search_books":
             session.stage = "library_search"
@@ -37,8 +37,10 @@ def handle_library_flow(text, phone_number_id, from_number, session):
             return HttpResponse("Prompted book search", status=200)
 
         elif text == "library_my_borrowed":
-            student = session.student
-            if not student:
+            # Fetch student
+            try:
+                student = Student.objects.get(reg_number=session.reg_number)
+            except Student.DoesNotExist:
                 send_whatsapp_message(phone_number_id, from_number, "❌ You need to log in first.")
                 return HttpResponse("Not logged in", status=200)
 
@@ -72,6 +74,7 @@ def handle_library_flow(text, phone_number_id, from_number, session):
             send_library_menu(phone_number_id, from_number)
             return HttpResponse("Invalid library option", status=200)
 
+    # Book search stage
     elif session.stage == "library_search":
         if text in ["library_my_borrowed", "library_back_to_main", "library_menu"]:
             session.stage = "library_menu"
@@ -107,12 +110,15 @@ def handle_library_flow(text, phone_number_id, from_number, session):
             send_whatsapp_message(
                 phone_number_id,
                 from_number,
-                "⚠️ No books found with that keyword. Try something else like 'biology', 'Shakespeare', or an ISBN.\n\nYou can also type:\n• `library_my_borrowed`\n• `library_back_to_main`\n• `library_menu`"
+                "⚠️ No books found with that keyword. Try something else like 'biology', 'Shakespeare', or an ISBN.\n\n"
+                "You can also type:\n• `library_my_borrowed`\n• `library_back_to_main`\n• `library_menu`"
             )
 
         return HttpResponse("Library search completed", status=200)
 
+    # Default response if no library stage matches
     return HttpResponse("Library flow ignored", status=200)
+
 
 def send_library_menu(phone_number_id, to):
     sections = [{
@@ -130,38 +136,3 @@ def send_library_menu(phone_number_id, to):
         body="Welcome to the Library Management System. Please select an option:",
         sections=sections
     )
-
-def get_borrowed_books(reg_number):
-    # This is a placeholder - customize based on your DB schema!
-    # For example, Book model might have 'borrowed_by' field pointing to Student
-    borrowed_books = Book.objects.filter(borrowed_by__reg_number=reg_number, status='borrowed')
-    return [book.title for book in borrowed_books]
-
-
-def handle_borrowed_books(phone_number_id, from_number, session):
-    # Try to find the student by reg_number stored in session
-    try:
-        student = Student.objects.get(reg_number=session.reg_number)
-    except Student.DoesNotExist:
-        send_whatsapp_message(
-            phone_number_id, from_number,
-            "❌ Student record not found. Please ensure you entered the correct registration number."
-        )
-        return HttpResponse("Student not found", status=404)
-
-    # Query books currently rendered to this student
-    borrowed_books = Book.objects.filter(rendered_to=student, status='Rendered')
-
-    if borrowed_books.exists():
-        message = "📖 Here are your currently borrowed books:\n\n"
-        for book in borrowed_books:
-            location = book.shelf_location
-            message += f"- *{book.title}* by {book.author.name if book.author else 'Unknown'}\n"
-            message += f"  Due: {book.render_to.strftime('%Y-%m-%d') if book.render_to else 'N/A'}\n"
-            message += f"  Location: {location}\n\n"
-    else:
-        message = "You currently have no borrowed books."
-
-    send_whatsapp_message(phone_number_id, from_number, message)
-    return HttpResponse("Sent borrowed books", status=200)
-
