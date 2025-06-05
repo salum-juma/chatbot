@@ -60,6 +60,13 @@ def handle_library_flow(text, phone_number_id, from_number, session):
             return HttpResponse("Invalid library option", status=200)
 
     elif session.stage == "library_search":
+        # Handle command even in search mode
+        if text in ["library_my_borrowed", "library_back_to_main", "library_menu"]:
+            session.stage = "library_menu"
+            session.save()
+            return handle_library_flow(text, phone_number_id, from_number, session)
+
+        # Continue with search flow
         search_query = text.strip()
 
         books = Book.objects.filter(
@@ -89,7 +96,7 @@ def handle_library_flow(text, phone_number_id, from_number, session):
             send_whatsapp_message(
                 phone_number_id,
                 from_number,
-                "⚠️ No books found with that keyword. Try something else like 'biology', 'Shakespeare', or an ISBN."
+                "⚠️ No books found with that keyword. Try something else like 'biology', 'Shakespeare', or an ISBN.\n\nYou can also type:\n• `library_my_borrowed`\n• `library_back_to_main`\n• `library_menu`"
             )
 
         return HttpResponse("Library search completed", status=200)
