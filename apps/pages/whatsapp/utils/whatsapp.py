@@ -176,3 +176,5 @@ def send_whatsapp_list_message(phone_number_id, to, body, sections):
     }
 
     requests.post(url, headers=headers, json=payload)
+
+

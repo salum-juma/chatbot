@@ -7,7 +7,7 @@ from apps.pages.whatsapp.handlers.language_handler import handle_language_select
 from apps.pages.whatsapp.handlers.english_handler import handle_english_flow
 from apps.pages.whatsapp.handlers.swahili_handler import handle_swahili_flow
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message, send_whatsapp_list_message
-from apps.pages.whatsapp.handlers.library_handler import handle_library_flow
+from apps.pages.whatsapp.handlers.library_handler import handle_library_flow, send_library_menu
 
 
 @csrf_exempt
@@ -125,7 +125,11 @@ def whatsapp_webhook(request):
                     return HttpResponse("Sent announcements", status=200)
 
                 if text == "student_library":
-                    return handle_library_flow(text, phone_number_id, from_number, session)
+                    session.stage = "library_menu"
+                    session.save()
+                    send_library_menu(phone_number_id, from_number)
+                    return HttpResponse("Library menu sent", status=200)
+
 
                 if text == "student_inquiries":
                     send_whatsapp_message(phone_number_id, from_number, "❓ FAQ and common questions.")
