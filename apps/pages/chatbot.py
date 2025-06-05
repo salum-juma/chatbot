@@ -5,7 +5,7 @@ from apps.pages.models import ChatSession
 from apps.pages.whatsapp.handlers.language_handler import handle_language_selection
 from apps.pages.whatsapp.handlers.english_handler import handle_english_flow
 from apps.pages.whatsapp.handlers.swahili_handler import handle_swahili_flow
-from apps.pages.whatsapp.handlers.library_handler import handle_library_flow, send_library_menu, handle_borrowed_books
+from apps.pages.whatsapp.handlers.library_handler import handle_library_flow
 from apps.pages.whatsapp.handlers.login_handler import handle_login_flow
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
 
@@ -82,11 +82,7 @@ def whatsapp_webhook(request):
                 if text == "student_library":
                     session.stage = "library_menu"
                     session.save()
-                    send_library_menu(phone_number_id, from_number)
-                    return HttpResponse("Library menu sent", status=200)
-
-                if text == "borrowed_books":  # Added handling for borrowed books
-                    return handle_borrowed_books(phone_number_id, from_number, session)
+                    return handle_library_flow(text, phone_number_id, from_number, session)
 
                 if text == "student_inquiries":
                     send_whatsapp_message(phone_number_id, from_number, "❓ FAQ and common questions.")
@@ -105,7 +101,7 @@ def whatsapp_webhook(request):
                     return HttpResponse("Returned to main menu", status=200)
 
             # --- Delegate to Library Handler ---
-            if session.stage in ['library_menu', 'library_search']:
+            if session.stage in ['library_menu', 'library_search'] or text == 'student_library':
                 return handle_library_flow(text, phone_number_id, from_number, session)
 
             # --- Fallback: Unrecognized ---
