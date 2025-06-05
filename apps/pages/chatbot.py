@@ -1,14 +1,13 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 import json
-from django.contrib.auth import authenticate
-from apps.pages.models import ChatSession, Student, Book
+from apps.pages.models import ChatSession
 from apps.pages.whatsapp.handlers.language_handler import handle_language_selection
 from apps.pages.whatsapp.handlers.english_handler import handle_english_flow
 from apps.pages.whatsapp.handlers.swahili_handler import handle_swahili_flow
-from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message, send_whatsapp_list_message
 from apps.pages.whatsapp.handlers.library_handler import handle_library_flow, send_library_menu
-
+from apps.pages.whatsapp.handlers.login_handler import handle_login_flow
+from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
 
 @csrf_exempt
 def whatsapp_webhook(request):
@@ -43,22 +42,22 @@ def whatsapp_webhook(request):
             else:
                 text = message.get("text", {}).get("body", "").lower()
 
+            # Get or create chat session for this user
             session, _ = ChatSession.objects.get_or_create(phone_number=from_number)
 
-            # Language selection entry point
+            # Entry points
             if text in ['hi', 'hello', 'start', 'hey']:
                 return handle_language_selection(phone_number_id, from_number)
 
-            # Language flows
             if text.startswith("lang_english") or text in ['prospectives', 'suggestion_box']:
                 return handle_english_flow(text, phone_number_id, from_number)
 
             if text.startswith("lang_swahili"):
                 return handle_swahili_flow(text, phone_number_id, from_number)
 
-            # Student login
             if text == 'current_student':
                 session.stage = 'awaiting_reg_number'
+                session.reg_number = None
                 session.save()
                 send_whatsapp_message(
                     phone_number_id, from_number,
@@ -66,63 +65,13 @@ def whatsapp_webhook(request):
                 )
                 return HttpResponse("Awaiting reg number", status=200)
 
-            if session.stage == 'awaiting_reg_number':
-                session.reg_number = text
-                session.stage = 'awaiting_password'
-                session.save()
-                send_whatsapp_message(
-                    phone_number_id, from_number,
-                    "🔐 Enter your Vcampus password to confirm your identity."
-                )
-                return HttpResponse("Awaiting password", status=200)
+            # Login flow delegation
+            if session.stage.startswith('awaiting_'):
+                login_response = handle_login_flow(text, phone_number_id, from_number, session)
+                if login_response:
+                    return login_response
 
-            if session.stage == 'awaiting_password':
-                user = authenticate(username=session.reg_number, password=text)
-                if user:
-                    session.stage = 'student_portal_main'
-                    session.save()
-
-                    sections = [{
-                        "title": "📚 Student Services",
-                        "rows": [
-                            {"id": "student_announcements", "title": "📢 Announcements", "description": "Be updated on current news/events."},
-                            {"id": "student_library", "title": "📚 Library Management", "description": "Search and find books easily."},
-                            {"id": "student_inquiries", "title": "❓ Student Inquiries", "description": "View answers to common questions."},
-                            {"id": "student_guidelines", "title": "📖 Guidelines", "description": "Steps for various university processes."},
-                            {"id": "student_cafeteria", "title": "🍽️ Cafeteria", "description": "Order from the university restaurant."},
-                            {"id": "back_to_main_menu", "title": "🔙 Rudi Menyu Kuu", "description": "Return to the main menu."}
-                        ]
-                    }]
-
-                    send_whatsapp_list_message(
-                        phone_number_id, from_number,
-                        body="🎓 *Welcome to Student Portal!*\n\nPlease select a service to continue:",
-                        sections=sections
-                    )
-                    return HttpResponse("Options sent", status=200)
-                else:
-                    session.stage = 'awaiting_password_retry'
-                    session.save()
-                    send_whatsapp_message(
-                        phone_number_id, from_number,
-                        "❌ Invalid login.\nType *retry* to try again or *start over*."
-                    )
-                    return HttpResponse("Invalid login", status=401)
-
-            if session.stage == 'awaiting_password_retry':
-                if text == 'retry':
-                    session.stage = 'awaiting_password'
-                    session.save()
-                    send_whatsapp_message(phone_number_id, from_number, "🔁 Please enter your password again.")
-                    return HttpResponse("Retrying", status=200)
-                elif text == 'start over':
-                    session.stage = 'awaiting_reg_number'
-                    session.reg_number = None
-                    session.save()
-                    send_whatsapp_message(phone_number_id, from_number, "🔁 Please enter your registration number again.")
-                    return HttpResponse("Restarting", status=200)
-
-            # Student Portal options
+            # Student portal main menu options
             if session.stage == 'student_portal_main':
                 if text == "student_announcements":
                     send_whatsapp_message(phone_number_id, from_number, "📢 Latest announcements coming soon...")
@@ -150,7 +99,7 @@ def whatsapp_webhook(request):
                     send_whatsapp_message(phone_number_id, from_number, "🔙 Back to the main menu.")
                     return HttpResponse("Returned to main menu", status=200)
 
-            # Delegate all library flows
+            # Library flow delegation
             if session.stage in ['library_menu', 'library_search']:
                 return handle_library_flow(text, phone_number_id, from_number, session)
 

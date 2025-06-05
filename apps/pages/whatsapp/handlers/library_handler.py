@@ -5,8 +5,21 @@ from apps.pages.models import Book, ChatSession, Student
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message, send_whatsapp_list_message
 
 
+from django.db.models import Q
+from django.http import HttpResponse
+from django.contrib.auth.hashers import check_password
+from apps.pages.models import Book, ChatSession, Student
+from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message, send_whatsapp_list_message
+
+
 def handle_library_flow(text, phone_number_id, from_number, session):
     if text == "student_library":
+        if not session.student:
+            session.stage = "awaiting_login"
+            session.save()
+            send_whatsapp_message(phone_number_id, from_number, "🔐 Please log in first by sending: `REG1234 yourpassword`")
+            return HttpResponse("Login required", status=200)
+
         session.stage = "library_menu"
         session.save()
         send_library_menu(phone_number_id, from_number)
@@ -24,10 +37,10 @@ def handle_library_flow(text, phone_number_id, from_number, session):
             return HttpResponse("Prompted book search", status=200)
 
         elif text == "library_my_borrowed":
-            student = Student.objects.filter(phone_number=from_number).first()
+            student = session.student
             if not student:
-                send_whatsapp_message(phone_number_id, from_number, "❌ You are not registered as a student.")
-                return HttpResponse("Student not found", status=200)
+                send_whatsapp_message(phone_number_id, from_number, "❌ You need to log in first.")
+                return HttpResponse("Not logged in", status=200)
 
             borrowed_books = Book.objects.filter(rendered_to=student, status='Rendered')
 
@@ -60,13 +73,11 @@ def handle_library_flow(text, phone_number_id, from_number, session):
             return HttpResponse("Invalid library option", status=200)
 
     elif session.stage == "library_search":
-        # Handle command even in search mode
         if text in ["library_my_borrowed", "library_back_to_main", "library_menu"]:
             session.stage = "library_menu"
             session.save()
             return handle_library_flow(text, phone_number_id, from_number, session)
 
-        # Continue with search flow
         search_query = text.strip()
 
         books = Book.objects.filter(
@@ -102,7 +113,6 @@ def handle_library_flow(text, phone_number_id, from_number, session):
         return HttpResponse("Library search completed", status=200)
 
     return HttpResponse("Library flow ignored", status=200)
-
 
 def send_library_menu(phone_number_id, to):
     sections = [{
