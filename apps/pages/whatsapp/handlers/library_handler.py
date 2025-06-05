@@ -131,3 +131,37 @@ def send_library_menu(phone_number_id, to):
         sections=sections
     )
 
+def get_borrowed_books(reg_number):
+    # This is a placeholder - customize based on your DB schema!
+    # For example, Book model might have 'borrowed_by' field pointing to Student
+    borrowed_books = Book.objects.filter(borrowed_by__reg_number=reg_number, status='borrowed')
+    return [book.title for book in borrowed_books]
+
+
+def handle_borrowed_books(phone_number_id, from_number, session):
+    # Try to find the student by reg_number stored in session
+    try:
+        student = Student.objects.get(reg_number=session.reg_number)
+    except Student.DoesNotExist:
+        send_whatsapp_message(
+            phone_number_id, from_number,
+            "❌ Student record not found. Please ensure you entered the correct registration number."
+        )
+        return HttpResponse("Student not found", status=404)
+
+    # Query books currently rendered to this student
+    borrowed_books = Book.objects.filter(rendered_to=student, status='Rendered')
+
+    if borrowed_books.exists():
+        message = "📖 Here are your currently borrowed books:\n\n"
+        for book in borrowed_books:
+            location = book.shelf_location
+            message += f"- *{book.title}* by {book.author.name if book.author else 'Unknown'}\n"
+            message += f"  Due: {book.render_to.strftime('%Y-%m-%d') if book.render_to else 'N/A'}\n"
+            message += f"  Location: {location}\n\n"
+    else:
+        message = "You currently have no borrowed books."
+
+    send_whatsapp_message(phone_number_id, from_number, message)
+    return HttpResponse("Sent borrowed books", status=200)
+

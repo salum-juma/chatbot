@@ -5,7 +5,7 @@ from apps.pages.models import ChatSession
 from apps.pages.whatsapp.handlers.language_handler import handle_language_selection
 from apps.pages.whatsapp.handlers.english_handler import handle_english_flow
 from apps.pages.whatsapp.handlers.swahili_handler import handle_swahili_flow
-from apps.pages.whatsapp.handlers.library_handler import handle_library_flow, send_library_menu
+from apps.pages.whatsapp.handlers.library_handler import handle_library_flow, send_library_menu, handle_borrowed_books
 from apps.pages.whatsapp.handlers.login_handler import handle_login_flow
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
 
@@ -42,19 +42,21 @@ def whatsapp_webhook(request):
             else:
                 text = message.get("text", {}).get("body", "").lower()
 
-            # Get or create chat session for this user
+            # Get or create session
             session, _ = ChatSession.objects.get_or_create(phone_number=from_number)
 
-            # Entry points
+            # --- Entry Point: Greeting ---
             if text in ['hi', 'hello', 'start', 'hey']:
                 return handle_language_selection(phone_number_id, from_number)
 
+            # --- Language Selection ---
             if text.startswith("lang_english") or text in ['prospectives', 'suggestion_box']:
                 return handle_english_flow(text, phone_number_id, from_number)
 
             if text.startswith("lang_swahili"):
                 return handle_swahili_flow(text, phone_number_id, from_number)
 
+            # --- Student Login Entry Point ---
             if text == 'current_student':
                 session.stage = 'awaiting_reg_number'
                 session.reg_number = None
@@ -65,13 +67,13 @@ def whatsapp_webhook(request):
                 )
                 return HttpResponse("Awaiting reg number", status=200)
 
-            # Login flow delegation
-            if session.stage.startswith('awaiting_'):
+            # --- Delegate Login Handling ---
+            if session.stage and session.stage.startswith('awaiting_'):
                 login_response = handle_login_flow(text, phone_number_id, from_number, session)
                 if login_response:
                     return login_response
 
-            # Student portal main menu options
+            # --- Student Portal Main Menu ---
             if session.stage == 'student_portal_main':
                 if text == "student_announcements":
                     send_whatsapp_message(phone_number_id, from_number, "📢 Latest announcements coming soon...")
@@ -82,6 +84,9 @@ def whatsapp_webhook(request):
                     session.save()
                     send_library_menu(phone_number_id, from_number)
                     return HttpResponse("Library menu sent", status=200)
+
+                if text == "borrowed_books":  # Added handling for borrowed books
+                    return handle_borrowed_books(phone_number_id, from_number, session)
 
                 if text == "student_inquiries":
                     send_whatsapp_message(phone_number_id, from_number, "❓ FAQ and common questions.")
@@ -99,11 +104,11 @@ def whatsapp_webhook(request):
                     send_whatsapp_message(phone_number_id, from_number, "🔙 Back to the main menu.")
                     return HttpResponse("Returned to main menu", status=200)
 
-            # Library flow delegation
+            # --- Delegate to Library Handler ---
             if session.stage in ['library_menu', 'library_search']:
                 return handle_library_flow(text, phone_number_id, from_number, session)
 
-            # Fallback
+            # --- Fallback: Unrecognized ---
             send_whatsapp_message(phone_number_id, from_number, "🤖 Unrecognized input. Type *hello* to start.")
             return HttpResponse("Unknown input", status=200)
 
