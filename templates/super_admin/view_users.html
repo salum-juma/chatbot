@@ -56,26 +56,37 @@
                 <div class="content">
                     <h2 class="mb-4">All Registered Users</h2>
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped table-hover align-middle">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th scope="col">ID</th>
-                                    <th scope="col">Username</th>
-                                    <th scope="col">Email</th>
-                                    <th scope="col">Role</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for user in users %}
-                                <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>{{ user.full_name }}</td>
-                                    <td>{{ user.email }}</td>
-                                    <td>{{ user.role }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <table class="table table-bordered table-striped table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Phone Number</th>
+                                <th>Registration No</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ user.full_name }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.role }}</td>
+                                <td>
+                                    {% if user.student_profile %}
+                                        {{ user.student_profile.phone_number }}
+                                    {% else %}
+                                        {{ user.phone_number|default:"N/A" }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.registration_no }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
                     </div>
                 </div>
             </main>

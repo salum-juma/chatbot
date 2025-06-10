@@ -110,5 +110,6 @@ def add_user_page(request):
 
 
 def view_all_users(request):
-    users = User.objects.all()
+    # select_related with 'student_profile' to avoid extra queries
+    users = User.objects.all().select_related('student_profile')
     return render(request, 'super_admin/view_users.html', {'users': users})
