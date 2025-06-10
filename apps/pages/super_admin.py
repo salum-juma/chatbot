@@ -8,6 +8,7 @@ from django.db.models import Q
 from apps.pages.helpers.library.forms import BookForm, SuggestionForm
 from apps.pages.helpers.super_admin.super_admin_form import AddUserForm
 from apps.pages.models import Book, Suggestion, Author, Department, User, Student
+from apps.pages.whatsapp.utils.sms_logic import send_sms
 
 
 # Super Admin - Add User Page
@@ -29,7 +30,7 @@ def add_user_page(request):
             if new_department:
                 category = 'Degree' if 'degree' in role else 'Diploma'
                 department, _ = Department.objects.get_or_create(name=new_department, defaults={
-                    'code': '99',  # You may auto-generate or assign dynamically
+                    'code': '99',
                     'category': category
                 })
 
@@ -47,7 +48,7 @@ def add_user_page(request):
                     serial = 1
                 reg_number = f"{prefix}{department_code}{str(serial).zfill(3)}"
             else:
-                reg_number = email.split('@')[0]  # For staff/librarian/admin, use email prefix or any logic
+                reg_number = email.split('@')[0]  # For staff/librarian/admin
 
             # Create User
             user = User.objects.create_user(
@@ -67,10 +68,22 @@ def add_user_page(request):
                     reg_number=reg_number,
                     name=full_name,
                     department=department.name if department else 'General',
-                    phone_number=phone_number or ''
+                    phone_number=phone_number
                 )
 
-            messages.success(request, f"User {full_name} created successfully with Reg No: {reg_number}.")
+            # Prepare SMS message
+            sms_message = (
+                f"Welcome {full_name}! Your registration number is {reg_number}. "
+                f"Your password is: {password}. Please keep it safe."
+            )
+
+            # Send SMS
+            sms_sent = send_sms(phone_number, sms_message)
+            if sms_sent:
+                messages.success(request, f"User created successfully! SMS sent to {phone_number}.")
+            else:
+                messages.warning(request, f"User created successfully! But SMS failed to send to {phone_number}.")
+
             return redirect('add_user_page')
     else:
         form = AddUserForm()
@@ -79,6 +92,7 @@ def add_user_page(request):
         'form': form,
         'departments': departments
     })
+
 
 def view_all_users(request):
     users = User.objects.all()
