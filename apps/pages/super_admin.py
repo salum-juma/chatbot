@@ -29,26 +29,42 @@ def add_user_page(request):
             # Handle new department creation
             if new_department:
                 category = 'Degree' if 'degree' in role else 'Diploma'
-                department, _ = Department.objects.get_or_create(name=new_department, defaults={
-                    'code': '99',
-                    'category': category
-                })
 
-            # Determine department code
-            department_code = department.code if department else '00'
+                # Check if department with same name exists
+                department = Department.objects.filter(name=new_department).first()
+                if not department:
+                    # Assign new code starting from 01, incrementing
+                    existing_codes = Department.objects.filter(category=category).values_list('code', flat=True)
+                    used_codes = set(int(code) for code in existing_codes if code.isdigit())
+                    new_code = 1
+                    while new_code in used_codes:
+                        new_code += 1
+                    department_code = str(new_code).zfill(2)
+                    department = Department.objects.create(name=new_department, category=category, code=department_code)
 
-            # Generate student registration number
+            # Use existing department code
+            department_code = department.code.zfill(2) if department and department.code else '00'
+
+            # Generate registration number
             if role in ['degree_student', 'diploma_student']:
                 prefix = '30' if role == 'degree_student' else '20'
-                existing_regs = Student.objects.filter(reg_number__startswith=f"{prefix}{department_code}").order_by('-reg_number')
+                reg_prefix = f"{prefix}{department_code}"
+
+                # Get last serial number for this department+program type
+                existing_regs = Student.objects.filter(
+                    reg_number__startswith=reg_prefix
+                ).order_by('-reg_number')
+
                 if existing_regs.exists():
                     last = existing_regs.first().reg_number
                     serial = int(last[-3:]) + 1
                 else:
                     serial = 1
-                reg_number = f"{prefix}{department_code}{str(serial).zfill(3)}"
+
+                reg_number = f"{reg_prefix}{str(serial).zfill(3)}"
             else:
-                reg_number = email.split('@')[0]  # For staff/librarian/admin
+                # Staff/Librarian/Admin
+                reg_number = email.split('@')[0]
 
             # Create User
             user = User.objects.create_user(
@@ -59,7 +75,7 @@ def add_user_page(request):
                 role='student' if 'student' in role else role
             )
 
-            # Create Student profile if role is student
+            # Create student profile
             if 'student' in role:
                 Student.objects.create(
                     user=user,
@@ -71,14 +87,13 @@ def add_user_page(request):
                     phone_number=phone_number
                 )
 
-            # Prepare SMS message
+            # Prepare and send SMS
             sms_message = (
                 f"Welcome {full_name}! Your registration number is {reg_number}. "
                 f"Your password is: {password}. Please keep it safe."
             )
-
-            # Send SMS
             sms_sent = send_sms(phone_number, sms_message)
+
             if sms_sent:
                 messages.success(request, f"User created successfully! SMS sent to {phone_number}.")
             else:
