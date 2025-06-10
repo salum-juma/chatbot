@@ -47,8 +47,7 @@
 
       <!-- Main Content -->
       <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-        <div
-          class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
           <h1 class="h2">Add New User</h1>
         </div>
 
@@ -57,7 +56,7 @@
             {% csrf_token %}
 
             <div class="mb-3">
-              <label for="id_username" class="form-label">Username</label>
+              <label for="id_username" class="form-label">Full Name</label>
               {{ form.username|add_class:"form-control" }}
               {% if form.username.errors %}
               <div class="text-danger">
@@ -104,25 +103,32 @@
               {% endif %}
             </div>
 
+            <div class="mb-3">
+              <label for="id_phone_number" class="form-label">Phone Number</label>
+              {{ form.phone_number|add_class:"form-control" }}
+              {% if form.phone_number.errors %}
+              <div class="text-danger">
+                {% for error in form.phone_number.errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
 
             <div class="mb-3">
               <label for="id_department" class="form-label">Department (optional)</label>
-              <select name="department" id="id_department" class="form-control">
-                <option value="">Select a Department</option>
-                {% for department in departments %}
-                {% if form.department.value|stringformat:"s" == department.id|stringformat:"s" %}
-                <option value="{{ department.id }}" selected>{{ department.name }}</option>
-                {% else %}
-                <option value="{{ department.id }}">{{ department.name }}</option>
-                {% endif %}
-                {% empty %}
-                <option value="">No departments available</option>
-                {% endfor %}
-              </select>
+            <select name="department" id="id_department" class="form-control">
+              <option value="">Select a Department</option>
+              {% for department in departments %}
+                <option value="{{ department.id }}" data-category="{{ department.category }}">
+                  {{ department.name }} ({{ department.category|title }})
+                </option>
+              {% endfor %}
+            </select>
+
 
               <div class="mt-2">
-                <input type="text" class="form-control" placeholder="Or enter a new department" name="new_department"
-                  id="new_department">
+                <input type="text" class="form-control" placeholder="Or enter a new department" name="new_department" id="new_department">
               </div>
 
               {% if form.department.errors %}
@@ -134,8 +140,6 @@
               {% endif %}
             </div>
 
-
-
             <button type="submit" class="btn btn-primary">Add User</button>
           </form>
         </div>
@@ -145,6 +149,40 @@
 
   <!-- Bootstrap 5 JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const roleField = document.getElementById("id_role");
+    const departmentField = document.getElementById("id_department");
+
+    function filterDepartments() {
+      const role = roleField.value;
+
+      for (const option of departmentField.options) {
+        const category = option.getAttribute("data-category");
+        if (!category || role === "admin" || role === "librarian") {
+          option.hidden = false;
+        } else if (role === "degree" && category !== "degree") {
+          option.hidden = true;
+        } else if (role === "diploma" && category !== "diploma") {
+          option.hidden = true;
+        } else {
+          option.hidden = false;
+        }
+      }
+
+      // Reset selection if current option is hidden
+      if (departmentField.selectedOptions.length &&
+          departmentField.selectedOptions[0].hidden) {
+        departmentField.value = "";
+      }
+    }
+
+    roleField.addEventListener("change", filterDepartments);
+    filterDepartments();  // Initial call
+  });
+</script>
+
+
 </body>
 
 </html>

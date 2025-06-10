@@ -17,53 +17,60 @@ def add_user_page(request):
     if request.method == 'POST':
         form = AddUserForm(request.POST)
         if form.is_valid():
-            # Extract cleaned form data
-            username = form.cleaned_data['username']
+            full_name = form.cleaned_data['username']
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
             role = form.cleaned_data['role']
-            department = form.cleaned_data.get('department')
-            new_department = request.POST.get('new_department', '').strip()
+            department = form.cleaned_data['department']
+            new_department = form.cleaned_data['new_department'].strip()
+            phone_number = form.cleaned_data.get('phone_number')
 
-            # Handle new department creation if provided
+            # Handle new department creation
             if new_department:
-                department, _ = Department.objects.get_or_create(name=new_department)
+                category = 'Degree' if 'degree' in role else 'Diploma'
+                department, _ = Department.objects.get_or_create(name=new_department, defaults={
+                    'code': '99',  # You may auto-generate or assign dynamically
+                    'category': category
+                })
 
-            # Determine registration number
-            if role == 'student':
-                last_user = User.objects.filter(registration_no__startswith='2001').order_by('-registration_no').first()
-                if last_user:
-                    last_reg_no = int(last_user.registration_no)
-                    new_reg_no = str(last_reg_no + 1)
+            # Determine department code
+            department_code = department.code if department else '00'
+
+            # Generate student registration number
+            if role in ['degree_student', 'diploma_student']:
+                prefix = '30' if role == 'degree_student' else '20'
+                existing_regs = Student.objects.filter(reg_number__startswith=f"{prefix}{department_code}").order_by('-reg_number')
+                if existing_regs.exists():
+                    last = existing_regs.first().reg_number
+                    serial = int(last[-3:]) + 1
                 else:
-                    new_reg_no = '20010101'
+                    serial = 1
+                reg_number = f"{prefix}{department_code}{str(serial).zfill(3)}"
             else:
-                new_reg_no = username  # Use provided username for non-students
+                reg_number = email.split('@')[0]  # For staff/librarian/admin, use email prefix or any logic
 
-            # Create user
+            # Create User
             user = User.objects.create_user(
-                registration_no=new_reg_no,
+                registration_no=reg_number,
                 password=password,
                 email=email,
-                full_name=username,
-                role=role
+                full_name=full_name,
+                role='student' if 'student' in role else role
             )
 
-            # Optionally associate department (if needed in your model)
-            if department:
-                pass  # Extend model logic if you want to save department info
-
-            if role == 'student':
+            # Create Student profile if role is student
+            if 'student' in role:
                 Student.objects.create(
-                user=user,
-                enrollment_year=2025,  # Optionally make dynamic
-                program="Default Program",  # Optionally make dynamic
-                reg_number=new_reg_no,
-                name=username,
-                department=department.name if department else 'General'
-            )
+                    user=user,
+                    enrollment_year=2025,
+                    program='Default Program',
+                    reg_number=reg_number,
+                    name=full_name,
+                    department=department.name if department else 'General',
+                    phone_number=phone_number or ''
+                )
 
-            messages.success(request, "User created successfully.")
+            messages.success(request, f"User {full_name} created successfully with Reg No: {reg_number}.")
             return redirect('add_user_page')
     else:
         form = AddUserForm()
@@ -72,7 +79,6 @@ def add_user_page(request):
         'form': form,
         'departments': departments
     })
-
 
 def view_all_users(request):
     users = User.objects.all()
