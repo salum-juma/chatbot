@@ -2,7 +2,7 @@ from apps.pages.models import ChatSession
 from ..utils.whatsapp import (
     send_whatsapp_message,
     send_group_selection_list,
-    send_prospectives_menu_list
+    send_whatsapp_prospectives_menu,
 )
 from django.http import HttpResponse
 
@@ -13,7 +13,7 @@ def handle_english_flow(text, phone_number_id, from_number):
 
     elif text == "prospectives":
         # Show the list of prospective options
-        send_prospectives_menu_list(phone_number_id, from_number)
+        send_whatsapp_prospectives_menu(phone_number_id, from_number)
 
     elif text == "about_us":
         send_whatsapp_message(

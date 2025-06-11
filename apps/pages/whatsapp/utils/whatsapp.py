@@ -238,4 +238,3 @@ def send_whatsapp_prospectives_menu(phone_number_id, to):
     response = requests.post(url, headers=headers, json=payload)
     print("Prospectives menu response:", response.status_code, response.json())
     return response.json()
-
