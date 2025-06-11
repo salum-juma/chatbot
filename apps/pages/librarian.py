@@ -5,8 +5,8 @@ from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
 from django.contrib import messages
 from django.http import HttpResponse
-from  apps.pages.helpers.library.forms import BookForm,SuggestionForm
-from .models import Book,Suggestion,Author,Department,Student,User
+from  apps.pages.helpers.library.forms import BookForm, PastPaperForm,SuggestionForm
+from .models import Book, PastPaper,Suggestion,Author,Department,Student,User
 from django.db.models import Q
 from django.shortcuts import redirect
 from django.views.decorators.csrf import csrf_exempt
@@ -199,3 +199,55 @@ def view_penalties(request):
     penalties = Penalty.objects.select_related('student', 'book').order_by('-created_at')
     return render(request, 'librarian/view_penalties.html', {'penalties': penalties})
 
+def past_papers(request):
+    papers = PastPaper.objects.all().order_by('-uploaded_at')
+    return render(request, 'librarian/past_papers.html', {'papers': papers})
+
+def add_past_paper(request):
+    departments = Department.objects.all()
+    if request.method == 'POST':
+        form = PastPaperForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('past_paper_list')
+    else:
+        form = PastPaperForm()
+    return render(request, 'librarian/add_past_paper.html', {'form': form, 'departments': departments})
+
+
+def past_paper_list(request):
+    papers = PastPaper.objects.all()
+
+    department = request.GET.get('department')
+    year = request.GET.get('academic_year')
+    pub_year = request.GET.get('published_year')
+
+    # Convert department to int if possible, else None
+    try:
+        department_int = int(department) if department else None
+    except (ValueError, TypeError):
+        department_int = None
+
+    if department_int:
+        papers = papers.filter(department__id=department_int)
+    if year:
+        papers = papers.filter(academic_year=year)
+    if pub_year:
+        papers = papers.filter(published_year=pub_year)
+
+    context = {
+        'papers': papers,
+        'departments': Department.objects.all(),
+        'selected_department': str(department) if department else '',  # convert to string
+        'selected_year': year,
+        'selected_pub_year': pub_year,
+    }
+
+    return render(request, 'librarian/past_paper_list.html', context)
+
+
+def delete_past_paper(request, pk):
+    paper = get_object_or_404(PastPaper, pk=pk)
+    paper.delete()
+    messages.success(request, "Past paper deleted.")
+    return redirect('past_paper_list')

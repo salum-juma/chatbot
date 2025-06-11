@@ -6,6 +6,7 @@ from datetime import timedelta
 # -------------------------
 # Custom User Management
 # -------------------------
+
 class OTPStorage(models.Model):
     user = models.ForeignKey('User', on_delete=models.CASCADE)
     otp_code = models.CharField(max_length=4)
@@ -17,7 +18,7 @@ class OTPStorage(models.Model):
     def __str__(self):
         return f"OTP for {self.user.registration_no} - {self.otp_code}"
 
-    
+
 class UserManager(BaseUserManager):
     def create_user(self, registration_no, password=None, **extra_fields):
         if not registration_no:
@@ -59,14 +60,17 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 # -------------------------
-# Department Model
+# Department
 # -------------------------
 
 class Department(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    code = models.CharField(max_length=10,default='00')
-    category = models.CharField(max_length=20, choices=[('degree', 'Degree'), ('diploma', 'Diploma')], default='degree')
-
+    code = models.CharField(max_length=10, default='00')
+    category = models.CharField(
+        max_length=20,
+        choices=[('degree', 'Degree'), ('diploma', 'Diploma')],
+        default='degree'
+    )
 
     def __str__(self):
         return f"{self.name} ({self.category})"
@@ -78,13 +82,13 @@ class Department(models.Model):
 
 class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile')
+    reg_number = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=100, default='Sample')
     enrollment_year = models.PositiveIntegerField()
     program = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=15, blank=True)
     gender = models.CharField(max_length=10, choices=[("Male", "Male"), ("Female", "Female")], blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
-    reg_number = models.CharField(max_length=20, unique=True)
-    name = models.CharField(max_length=100, default='Sample')
     department = models.CharField(max_length=100, default='General')
 
     def __str__(self):
@@ -92,7 +96,7 @@ class Student(models.Model):
 
 
 # -------------------------
-# Book and Library Models
+# Library System
 # -------------------------
 
 class Author(models.Model):
@@ -132,28 +136,7 @@ class Book(models.Model):
 
 
 # -------------------------
-# Suggestions & Feedback
-# -------------------------
-
-class Suggestion(models.Model):
-    SUGGESTION_TYPES = [
-        ('feature', 'Feature Request'),
-        ('bug', 'Bug Report'),
-        ('general', 'General Feedback'),
-    ]
-
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='suggestions')
-    suggestion_type = models.CharField(max_length=20, choices=SUGGESTION_TYPES, default='general')
-    message = models.TextField()
-    submitted_at = models.DateTimeField(auto_now_add=True)
-    is_reviewed = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"Suggestion #{self.id} ({self.get_suggestion_type_display()})"
-
-
-# -------------------------
-# Penalty for Late Return
+# Penalty System
 # -------------------------
 
 class Penalty(models.Model):
@@ -175,7 +158,28 @@ class Penalty(models.Model):
 
 
 # -------------------------
-# Chat Sessions for Bot
+# Suggestion & Feedback
+# -------------------------
+
+class Suggestion(models.Model):
+    SUGGESTION_TYPES = [
+        ('feature', 'Feature Request'),
+        ('bug', 'Bug Report'),
+        ('general', 'General Feedback'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='suggestions')
+    suggestion_type = models.CharField(max_length=20, choices=SUGGESTION_TYPES, default='general')
+    message = models.TextField()
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    is_reviewed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Suggestion #{self.id} ({self.get_suggestion_type_display()})"
+
+
+# -------------------------
+# Chat Session for Bot
 # -------------------------
 
 class ChatSession(models.Model):
@@ -183,13 +187,35 @@ class ChatSession(models.Model):
     stage = models.CharField(max_length=50, default='initial')
     reg_number = models.CharField(max_length=50, blank=True, null=True)
     password = models.CharField(max_length=100, blank=True, null=True)
-    last_message_id = models.CharField(max_length=255, blank=True, null=True)  # ✅ Add this line
+    last_message_id = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.phone_number
 
+
+# -------------------------
+# Past Papers
+# -------------------------
+
+class PastPaper(models.Model):
+    YEAR_CHOICES = [
+        (1, '1st Year'),
+        (2, '2nd Year'),
+        (3, '3rd Year'),
+        (4, '4th Year'),
+    ]
+
+    title = models.CharField(max_length=255)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE)
+    academic_year = models.PositiveSmallIntegerField(choices=YEAR_CHOICES)
+    published_year = models.PositiveIntegerField()
+    pdf = models.FileField(upload_to='past_papers/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} ({self.published_year})"
 
 
 # -------------------------
@@ -199,7 +225,7 @@ class ChatSession(models.Model):
 class Product(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
-    info = models.CharField(max_length=100, default='')
+    info = models.CharField(max_length=100, default='', blank=True)
     price = models.IntegerField(blank=True, null=True)
 
     def __str__(self):

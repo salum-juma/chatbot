@@ -1,5 +1,7 @@
 from django.urls import path
 from . import super_admin, student, views, librarian,chatbot
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -23,6 +25,10 @@ urlpatterns = [
     path('librarian/get-student-info/', views.get_student_info, name='get_student_info'),  # if this remains in views
     path('librarian/penalties/', librarian.view_penalties, name='view_penalties'),
 
+    path('past-papers/', librarian.past_papers, name='past_paper_list'),
+    path('past-papers/add/', librarian.add_past_paper, name='add_past_paper'),
+    path('past-papers/delete/<int:pk>/', librarian.delete_past_paper, name='delete_past_paper'),
+
 
 
     # Suggestions
@@ -41,4 +47,4 @@ urlpatterns = [
     path('reset-password/', views.reset_password, name='reset_password'),
 
 
-        ]
+        ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -41,6 +41,13 @@ DEBUG = str2bool(os.environ.get('DEBUG'))
 # Docker HOST
 ALLOWED_HOSTS = ['*']
 
+
+
+#media
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+
 # Add here your deployment HOSTS
 CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://localhost:5085', 'http://127.0.0.1:8000', 'http://127.0.0.1:5085']
 
