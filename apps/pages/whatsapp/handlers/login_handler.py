@@ -42,8 +42,13 @@ def handle_login_flow(text, phone_number_id, from_number, session):
             session.save()
             send_whatsapp_message(
                 phone_number_id, from_number,
-                "❌ Invalid login.\nType *retry* to try again or *start over*."
+                (
+                    "❌ Invalid login.\n"
+                    "Type *retry* to try again, *start over* to restart, or visit the link below if you forgot your password:\n\n"
+                    "🔑 Forgot Password: https://django-material-dash2-latest-4635.onrender.com/forgot-password/"
+                )
             )
+
             return HttpResponse("Invalid login", status=401)
 
     if session.stage == 'awaiting_password_retry':
