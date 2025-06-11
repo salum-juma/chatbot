@@ -1,6 +1,6 @@
 from django.db.models import Q
 from django.http import HttpResponse
-from apps.pages.models import Book, ChatSession, Student
+from apps.pages.models import Book, PastPaper, Department, Student
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message, send_whatsapp_list_message
 
 
@@ -35,6 +35,14 @@ def handle_library_flow(text, phone_number_id, from_number, session):
                 "📚 Please type the book title, author, ISBN, or department to search."
             )
             return HttpResponse("Prompted book search", status=200)
+
+        elif text == "library_search_papers":
+            # Start past paper interactive flow
+            session.stage = "past_paper_choose_department"
+            session.data = {}  # Clear any previous data
+            session.save()
+            send_department_options(phone_number_id, from_number)
+            return HttpResponse("Sent department options", status=200)
 
         elif text == "library_my_borrowed":
             # Fetch student
@@ -116,7 +124,76 @@ def handle_library_flow(text, phone_number_id, from_number, session):
 
         return HttpResponse("Library search completed", status=200)
 
-    # Default response if no library stage matches
+    # Past paper department selection stage
+    elif session.stage == "past_paper_choose_department":
+        try:
+            selected_department = Department.objects.get(name__iexact=text.strip())
+        except Department.DoesNotExist:
+            send_whatsapp_message(phone_number_id, from_number, "⚠️ Invalid department. Please select from the list.")
+            send_department_options(phone_number_id, from_number)
+            return HttpResponse("Invalid department", status=200)
+
+        # Save department in session data
+        session.data = session.data or {}
+        session.data['past_paper_department_id'] = selected_department.id
+        session.stage = "past_paper_choose_year"
+        session.save()
+
+        send_year_options(phone_number_id, from_number)
+        return HttpResponse("Sent year options", status=200)
+
+    # Past paper year selection stage
+    elif session.stage == "past_paper_choose_year":
+        if text.lower() == "all":
+            year_filter = None
+        else:
+            try:
+                year_filter = int(text)
+                if year_filter not in [1, 2, 3, 4]:
+                    raise ValueError
+            except ValueError:
+                send_whatsapp_message(phone_number_id, from_number, "⚠️ Please select a valid year (1-4) or 'All'.")
+                send_year_options(phone_number_id, from_number)
+                return HttpResponse("Invalid year", status=200)
+
+        department_id = session.data.get('past_paper_department_id')
+        if not department_id:
+            send_whatsapp_message(phone_number_id, from_number, "⚠️ Something went wrong, please start over.")
+            session.stage = "library_menu"
+            session.save()
+            send_library_menu(phone_number_id, from_number)
+            return HttpResponse("Missing department", status=200)
+
+        filters = {'department_id': department_id}
+        if year_filter:
+            filters['academic_year'] = year_filter
+
+        past_papers = PastPaper.objects.filter(**filters)
+        if past_papers.exists():
+            for paper in past_papers[:5]:  # limit results to first 5
+                send_whatsapp_message(
+                    phone_number_id,
+                    from_number,
+                    f"*📝 {paper.title}*\n"
+                    f"📘 Academic Year: {paper.get_academic_year_display()}\n"
+                    f"📅 Published: {paper.published_year}\n"
+                    f"🏫 Department: {paper.department.name}\n"
+                    f"📎 Download: {paper.pdf.url}"
+                )
+        else:
+            send_whatsapp_message(
+                phone_number_id,
+                from_number,
+                "📭 No past papers found for that selection."
+            )
+
+        # Return user to library menu
+        session.stage = "library_menu"
+        session.save()
+        send_library_menu(phone_number_id, from_number)
+        return HttpResponse("Past papers sent", status=200)
+
+    # Default fallback response
     return HttpResponse("Library flow ignored", status=200)
 
 
@@ -125,6 +202,7 @@ def send_library_menu(phone_number_id, to):
         "title": "📚 Library Menu",
         "rows": [
             {"id": "library_search_books", "title": "🔍 Search Book", "description": "Search books by title, author, ISBN, or department."},
+            {"id": "library_search_papers", "title": "📝 Search Past Papers", "description": "Find past exam papers by department and year."},
             {"id": "library_my_borrowed", "title": "📖 My Borrowed Books", "description": "View books you have currently borrowed."},
             {"id": "library_back_to_main", "title": "🔙 Back to Main Menu", "description": "Return to the main student menu."}
         ]
@@ -134,5 +212,39 @@ def send_library_menu(phone_number_id, to):
         phone_number_id,
         to,
         body="Welcome to the Library Management System. Please select an option:",
+        sections=sections
+    )
+
+
+def send_department_options(phone_number_id, to):
+    departments = Department.objects.all()
+    sections = [{
+        "title": "Departments",
+        "rows": [{"id": dept.name, "title": dept.name} for dept in departments]
+    }]
+    send_whatsapp_list_message(
+        phone_number_id,
+        to,
+        body="Please select the department:",
+        sections=sections
+    )
+
+
+def send_year_options(phone_number_id, to):
+    years = [
+        {"id": "1", "title": "1st Year"},
+        {"id": "2", "title": "2nd Year"},
+        {"id": "3", "title": "3rd Year"},
+        {"id": "4", "title": "4th Year"},
+        {"id": "all", "title": "All Years"},
+    ]
+    sections = [{
+        "title": "Academic Year",
+        "rows": years
+    }]
+    send_whatsapp_list_message(
+        phone_number_id,
+        to,
+        body="Please select the academic year:",
         sections=sections
     )
