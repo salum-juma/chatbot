@@ -36,5 +36,9 @@ urlpatterns = [
 
     # whatsapp
     path('webhook/', chatbot.whatsapp_webhook, name='whatsapp_webhook'),
-    
+    path('forgot-password/', views.forgot_password, name='forgot_password'),
+    path('verify-otp/', views.verify_otp, name='verify_otp'),
+    path('reset-password/', views.reset_password, name='reset_password'),
+
+
         ]

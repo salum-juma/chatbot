@@ -1,11 +1,23 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-
+from django.utils import timezone
+from datetime import timedelta
 
 # -------------------------
 # Custom User Management
 # -------------------------
+class OTPStorage(models.Model):
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
+    otp_code = models.CharField(max_length=4)
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    def is_valid(self):
+        return timezone.now() < self.created_at + timedelta(minutes=5)
+
+    def __str__(self):
+        return f"OTP for {self.user.registration_no} - {self.otp_code}"
+
+    
 class UserManager(BaseUserManager):
     def create_user(self, registration_no, password=None, **extra_fields):
         if not registration_no:

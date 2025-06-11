@@ -72,6 +72,7 @@ def add_user_page(request):
                 password=password,
                 email=email,
                 full_name=full_name,
+                phone_number = phone_number,
                 role='student' if 'student' in role else role
             )
 
