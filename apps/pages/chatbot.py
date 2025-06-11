@@ -61,7 +61,15 @@ def whatsapp_webhook(request):
                 return handle_language_selection(phone_number_id, from_number)
 
             # --- Language Selection ---
-            if text.startswith("lang_english") or text in ['prospectives', 'suggestion_box']:
+            if text.startswith("lang_english") or text in [
+                'prospectives',
+                'suggestion_box',
+                'about_us',
+                'our_programs',
+                'online_applications',
+                'our_contacts',
+                'current_student'
+            ]:
                 return handle_english_flow(text, phone_number_id, from_number)
 
             if text.startswith("lang_swahili"):
