@@ -367,5 +367,5 @@ def _send_past_papers(phone_number_id: str, from_number: str, dept_id: int, year
             f"📘 Academic Year: {paper.get_academic_year_display()}\n"
             f"📅 Published: {paper.published_year}\n"
             f"🏫 Department: {paper.department.name}\n"
-            f"📎 Download:https://django-material-dash2-latest-4635.onrender.com/{paper.pdf.url}",
+            f"📎 Download:https://django-material-dash2-latest-4635.onrender.com{paper.pdf.url}",
         )
