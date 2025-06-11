@@ -9,6 +9,7 @@ from apps.pages.whatsapp.handlers.library_handler import handle_library_flow
 from apps.pages.whatsapp.handlers.login_handler import handle_login_flow
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
 
+
 @csrf_exempt
 def whatsapp_webhook(request):
     if request.method == 'GET':
@@ -29,7 +30,8 @@ def whatsapp_webhook(request):
                 return HttpResponse("No messages", status=200)
 
             message = messages[0]
-            from_number = message["from"]
+            message_id = message.get("id")
+            from_number = message.get("from")
             phone_number_id = value.get("metadata", {}).get("phone_number_id")
 
             interactive = message.get("interactive", {})
@@ -44,6 +46,15 @@ def whatsapp_webhook(request):
 
             # Get or create session
             session, _ = ChatSession.objects.get_or_create(phone_number=from_number)
+
+            # Avoid processing duplicate messages (e.g. from retries)
+            if session.last_message_id == message_id:
+                # Ignore duplicate message
+                return HttpResponse("Duplicate message ignored", status=200)
+
+            # Save current message ID to session to prevent reprocessing
+            session.last_message_id = message_id
+            session.save()
 
             # --- Entry Point: Greeting ---
             if text in ['hi', 'hello', 'start', 'hey']:

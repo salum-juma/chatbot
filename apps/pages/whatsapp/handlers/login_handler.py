@@ -49,7 +49,7 @@ def handle_login_flow(text, phone_number_id, from_number, session):
                 )
             )
 
-            return HttpResponse("Invalid login", status=401)
+            return HttpResponse("Invalid login", status=200)
 
     if session.stage == 'awaiting_password_retry':
         if text == 'retry':

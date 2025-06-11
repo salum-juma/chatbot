@@ -183,11 +183,13 @@ class ChatSession(models.Model):
     stage = models.CharField(max_length=50, default='initial')
     reg_number = models.CharField(max_length=50, blank=True, null=True)
     password = models.CharField(max_length=100, blank=True, null=True)
+    last_message_id = models.CharField(max_length=255, blank=True, null=True)  # ✅ Add this line
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.phone_number
+
 
 
 # -------------------------
