@@ -112,8 +112,14 @@ def whatsapp_webhook(request):
                     return HttpResponse("Returned to main menu", status=200)
 
             # --- Delegate to Library Handler ---
-            if session.stage in ['library_menu', 'library_search'] or text == 'student_library':
+            if session.stage in [
+                'library_menu',
+                'library_search',
+                'past_paper_choose_department',
+                'past_paper_choose_year'
+            ] or text == 'student_library':
                 return handle_library_flow(text, phone_number_id, from_number, session)
+
 
             # --- Fallback: Unrecognized ---
             send_whatsapp_message(phone_number_id, from_number, "🤖 Unrecognized input. Type *hello* to start.")
