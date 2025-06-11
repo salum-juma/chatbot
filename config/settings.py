@@ -44,8 +44,13 @@ ALLOWED_HOSTS = ['*']
 
 
 #media
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # or wherever you collect static files
+
+# Your static folder
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
 
 # Add here your deployment HOSTS
