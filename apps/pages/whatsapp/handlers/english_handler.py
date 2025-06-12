@@ -32,8 +32,38 @@ def handle_english_flow(text, phone_number_id, from_number):
         send_whatsapp_message(
             phone_number_id,
             from_number,
-            "🎓 *Our Programs*\n\nWe offer a variety of undergraduate and postgraduate programs across different faculties. Explore what's available at our campus!"
+            "🎓 *Our Programs*\n\n"
+            "Explore a variety of academic programs available at *St. Joseph University in Tanzania*:\n\n"
+
+            "📘 *Diploma Programs (Main Campus)*\n"
+            "• Civil Engineering\n"
+            "• Mechanical Engineering\n"
+            "• Electrical Engineering\n"
+            "• Electronics & Telecommunication Engineering\n"
+            "• Computer Engineering\n"
+            "• Mechatronic Engineering\n"
+            "• Industrial Engineering\n"
+            "• Information Technology\n\n"
+
+            "🎓 *Degree Programs (Main Campus)*\n"
+            "• Civil Engineering\n"
+            "• Mechanical Engineering\n"
+            "• Electrical Engineering\n"
+            "• Electronics & Telecommunication Engineering\n"
+            "• Computer Science and Engineering\n"
+            "• Computer Science\n"
+            "• Bachelor of Science with Education\n\n"
+
+            "🏥 *Medical Campus - BOKO*\n"
+            "📘 *Diploma Programs*\n"
+            "• Nursing and Midwifery\n"
+            "• Pharmaceutical Sciences\n\n"
+            "🎓 *Degree Program*\n"
+            "• Doctor of Medicine (MD)\n\n"
+
+            "✨ To apply or learn more, visit: https://www.sjut.ac.tz/"
         )
+
 
     elif text == "online_applications":
         send_whatsapp_message(
