@@ -34,9 +34,8 @@ def whatsapp_webhook(request):
             from_number = message.get("from")
             phone_number_id = value.get("metadata", {}).get("phone_number_id")
 
+            # Extract text or interactive input
             interactive = message.get("interactive", {})
-            text = ""
-
             if "button_reply" in interactive:
                 text = interactive["button_reply"].get("id", "").lower()
             elif "list_reply" in interactive:
@@ -47,28 +46,20 @@ def whatsapp_webhook(request):
             # Get or create session
             session, _ = ChatSession.objects.get_or_create(phone_number=from_number)
 
-            # Avoid processing duplicate messages (e.g. from retries)
+            # Avoid duplicate processing
             if session.last_message_id == message_id:
-                # Ignore duplicate message
                 return HttpResponse("Duplicate message ignored", status=200)
-
-            # Save current message ID to session to prevent reprocessing
             session.last_message_id = message_id
             session.save()
 
-            # --- Entry Point: Greeting ---
+            # --- Greeting / Start ---
             if text in ['hi', 'hello', 'start', 'hey']:
                 return handle_language_selection(phone_number_id, from_number)
 
             # --- Language Selection ---
             if text.startswith("lang_english") or text in [
-                'prospectives',
-                'suggestion_box',
-                'about_us',
-                'our_programs',
-                'online_applications',
-                'our_contacts',
-                'current_student'
+                'prospectives', 'suggestion_box', 'about_us',
+                'our_programs', 'online_applications', 'our_contacts'
             ]:
                 return handle_english_flow(text, phone_number_id, from_number)
 
@@ -88,9 +79,7 @@ def whatsapp_webhook(request):
 
             # --- Delegate Login Handling ---
             if session.stage and session.stage.startswith('awaiting_'):
-                login_response = handle_login_flow(text, phone_number_id, from_number, session)
-                if login_response:
-                    return login_response
+                return handle_login_flow(text, phone_number_id, from_number, session)
 
             # --- Student Portal Main Menu ---
             if session.stage == 'student_portal_main':
@@ -128,8 +117,7 @@ def whatsapp_webhook(request):
             ] or text == 'student_library':
                 return handle_library_flow(text, phone_number_id, from_number, session)
 
-
-            # --- Fallback: Unrecognized ---
+            # --- Fallback ---
             send_whatsapp_message(phone_number_id, from_number, "🤖 Unrecognized input. Type *hello* to start.")
             return HttpResponse("Unknown input", status=200)
 
