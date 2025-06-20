@@ -136,30 +136,41 @@ def add_announcement(request):
         title = request.POST.get('title')
         body = request.POST.get('body')
         category_id = request.POST.get('category_id')
-        new_category = request.POST.get('new_category')
+        new_category = request.POST.get('new_category').strip()
+
+        if new_category and category_id:
+            messages.error(request, "⚠️ Please provide either a new category or select an existing one, not both.")
+            return redirect('add_announcement')
 
         if new_category:
-            category, _ = AnnouncementCategory.objects.get_or_create(name=new_category.strip())
-        else:
+            category, _ = AnnouncementCategory.objects.get_or_create(name=new_category)
+        elif category_id:
             category = get_object_or_404(AnnouncementCategory, id=category_id)
+        else:
+            messages.error(request, "⚠️ Please choose a category or enter a new one.")
+            return redirect('add_announcement')
 
         Announcement.objects.create(title=title, body=body, category=category)
         messages.success(request, '📢 Announcement added successfully.')
-        return redirect('add_announcement')
+        return redirect('announcements')
 
-    announcements = Announcement.objects.select_related('category').order_by('-created_at')
+    # Group announcements by category
+    grouped_announcements = defaultdict(list)
+    for ann in Announcement.objects.select_related('category').order_by('-created_at'):
+        cat_name = ann.category.name if ann.category else "Uncategorized"
+        grouped_announcements[cat_name].append(ann)
+
     categories = AnnouncementCategory.objects.all()
     return render(request, 'super_admin/announcements.html', {
-        'announcements': announcements,
+        'announcements': grouped_announcements,
         'categories': categories
     })
-
 
 def delete_announcement(request, ann_id):
     announcement = get_object_or_404(Announcement, id=ann_id)
     announcement.delete()
     messages.success(request, "🗑️ Announcement deleted successfully.")
-    return redirect('add_announcement')
+    return redirect('announcements')
 
 
 def add_dummy_users(request):
