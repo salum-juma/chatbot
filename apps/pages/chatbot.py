@@ -8,7 +8,10 @@ from apps.pages.whatsapp.handlers.swahili_handler import handle_swahili_flow
 from apps.pages.whatsapp.handlers.library_handler import handle_library_flow
 from apps.pages.whatsapp.handlers.login_handler import handle_login_flow
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
-
+from apps.pages.whatsapp.handlers.announcement_handler import (
+    handle_announcement_menu,
+    handle_announcement_selection
+)
 
 @csrf_exempt
 def whatsapp_webhook(request):
@@ -84,27 +87,10 @@ def whatsapp_webhook(request):
             # --- Student Portal Main Menu ---
             if session.stage == 'student_portal_main':
                 if text == "student_announcements":
-                    from collections import defaultdict
+                    return handle_announcement_menu(phone_number_id, from_number)
 
-                    grouped = defaultdict(list)
-                    announcements = Announcement.objects.select_related('category').order_by('-created_at')
-
-                    for ann in announcements:
-                        category_name = ann.category.name if ann.category else "Uncategorized"
-                        grouped[category_name].append(ann)
-
-                    if grouped:
-                        msg = "*📢 Latest Announcements:*\n\n"
-                        for category, anns in grouped.items():
-                            msg += f"*📚 {category}*\n"
-                            for ann in anns:
-                                msg += f"🔹 *{ann.title}*\n{ann.body}\n📅 {ann.created_at.strftime('%b %d, %Y')}\n\n"
-                        send_whatsapp_message(phone_number_id, from_number, msg.strip())
-                        return HttpResponse("Sent announcements", status=200)
-                    else:
-                        send_whatsapp_message(phone_number_id, from_number, "📭 No announcements at the moment.")
-                        return HttpResponse("Sent announcements", status=200)
-
+                elif text.startswith("ann_category_") or text == "ann_view_all":
+                    return handle_announcement_selection(text, phone_number_id, from_number)
 
                 if text == "student_library":
                     session.stage = "library_menu"
