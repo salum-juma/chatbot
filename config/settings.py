@@ -42,6 +42,7 @@ DEBUG = str2bool(os.environ.get('DEBUG'))
 ALLOWED_HOSTS = ['*']
 
 
+LOGIN_URL = '/login/'
 
 #media
 STATIC_URL = '/static/'
@@ -213,7 +214,7 @@ STATICFILES_DIRS = (
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_REDIRECT_URL = '/home'
-LOGOUT_REDIRECT_URL = '/login'
+LOGOUT_REDIRECT_URL = '/login-user'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 

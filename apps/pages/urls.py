@@ -1,3 +1,4 @@
+from django.shortcuts import redirect
 from django.urls import path
 from . import super_admin, student, views, librarian,chatbot
 from django.conf import settings
@@ -5,10 +6,9 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('login/', views.index, name='login'),
-    path('logout/', views.custom_logout, name='logout'),
+    path('login-user/', views.index, name='login-user'),
+    path('logout-user/', views.custom_logout, name='logout-user'),
     path('home', views.home, name='home'),
-
     # Student routes
     path('student/home', views.student_home, name='student_home'),
     path('student/search-books/', librarian.search_books, name='search_books'),

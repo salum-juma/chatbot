@@ -2,9 +2,10 @@ import json
 from django.shortcuts import render,redirect
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate, login
-from django.http import JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse
 from django.contrib import messages
 from django.http import HttpResponse
+from huggingface_hub import logout
 from  apps.pages.helpers.library.forms import BookForm,SuggestionForm
 from apps.pages.whatsapp.utils.sms_logic import send_sms
 from .models import Book,Suggestion,Author,Department,Student,User
@@ -123,48 +124,48 @@ def get_student_info(request):
 
     
 
-
-
 @csrf_exempt
 def index(request):
     if request.method == 'POST':
-        try:
-            # Parse JSON data
-            data = json.loads(request.body)
-            registration_no = data.get('registration')
-            password = data.get('password')
-            to_json = data.get('toJson', False)
+        if request.content_type == 'application/json':
+            try:
+                data = json.loads(request.body)
+                registration_no = data.get('registration')
+                password = data.get('password')
+                to_json = data.get('toJson', False)
+            except json.JSONDecodeError:
+                return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
+        else:
+            registration_no = request.POST.get('username')
+            password = request.POST.get('password')
+            to_json = False
 
-            user = authenticate(request, username=registration_no, password=password)
+        user = authenticate(request, username=registration_no, password=password)
 
-            if user is not None:
-                login(request, user)
+        if user:
+            login(request, user)
+            if to_json:
+                return JsonResponse({
+                    'status': 'success',
+                    'role': user.role,
+                    'message': f"Logged in as {user.role}",
+                })
 
-                if to_json:
-                    return JsonResponse({
-                        'status': 'success',
-                        'role': user.role,
-                        'message': f"Logged in as {user.role}",
-                    })
-
-                # Normal role-based response
-                if user.role == 'admin':
-                    return redirect('add_user_page')
-                elif user.role == 'student':
-                    return HttpResponse("student")
-                elif user.role == 'librarian':
-                    return HttpResponse("librarian")
-                else:
-                    return HttpResponse("default")
+            # HTML form fallback
+            if user.role == 'admin':
+                return redirect('add_user_page')
+            elif user.role == 'student':
+                return redirect('student_home')
+            elif user.role == 'librarian':
+                return redirect('librarian_home')
             else:
+                return HttpResponse("Unknown role")
+        else:
+            if to_json:
                 return JsonResponse({'status': 'false', 'message': 'Invalid credentials'}, status=401)
-        except json.JSONDecodeError:
-            return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
-    else:
-        return render(request, 'auth/login.html')
+            return render(request, 'auth/login.html', {'error': 'Invalid credentials'})
 
-    
-
+    return render(request, 'auth/login.html')
 
 def home(request):
     user = request.user
@@ -210,4 +211,4 @@ def view_suggestions(request):
 
 def custom_logout(request):
     logout(request)  
-    return HttpResponseRedirect('/login/') 
+    return HttpResponseRedirect('/login-user/') 
