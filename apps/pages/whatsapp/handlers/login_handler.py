@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate
-from apps.pages.whatsapp.utils.menu import send_student_services_menu
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message, send_whatsapp_list_message
 from django.http import HttpResponse
+from apps.pages.whatsapp.utils.eng_menu import send_student_services_menu
 
 def handle_login_flow(text, phone_number_id, from_number, session):
     if session.stage == 'awaiting_reg_number':

@@ -1,7 +1,7 @@
 from django.db.models import Q
 from django.http import HttpResponse
 from apps.pages.models import Book, PastPaper, Department, Student
-from apps.pages.whatsapp.utils.menu import send_student_services_menu
+from apps.pages.whatsapp.utils.eng_menu import send_student_services_menu
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message, send_whatsapp_list_message
 
 
