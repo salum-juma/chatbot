@@ -86,16 +86,15 @@ def whatsapp_webhook(request):
                 if text == "student_announcements":
                     announcements = Announcement.objects.order_by('-created_at')[:5]
 
-                if announcements.exists():
-                    msg = "*📢 Latest Announcements:*\n\n"
-                    for ann in announcements:
-                        msg += f"🔹 *{ann.title}*\n{ann.body}\n📅 {ann.created_at.strftime('%b %d, %Y')}\n\n"
-                    send_whatsapp_message(phone_number_id, from_number, msg.strip())
-                else:
-                    send_whatsapp_message(phone_number_id, from_number, "📭 No announcements at the moment.")
-
-
-                    return HttpResponse("Sent announcements", status=200)
+                    if announcements.exists():
+                        msg = "*📢 Latest Announcements:*\n\n"
+                        for ann in announcements:
+                            msg += f"🔹 *{ann.title}*\n{ann.body}\n📅 {ann.created_at.strftime('%b %d, %Y')}\n\n"
+                        send_whatsapp_message(phone_number_id, from_number, msg.strip())
+                        return HttpResponse("Sent announcements", status=200)
+                    else:
+                        send_whatsapp_message(phone_number_id, from_number, "📭 No announcements at the moment.")
+                        return HttpResponse("Sent announcements", status=200)
 
                 if text == "student_library":
                     session.stage = "library_menu"
