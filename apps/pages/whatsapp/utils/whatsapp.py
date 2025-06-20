@@ -176,5 +176,65 @@ def send_whatsapp_list_message(phone_number_id, to, body, sections):
     }
 
     requests.post(url, headers=headers, json=payload)
+    
 
 
+def send_whatsapp_prospectives_menu(phone_number_id, to):
+    url = f"https://graph.facebook.com/v19.0/{phone_number_id}/messages"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": to,
+        "type": "interactive",
+        "interactive": {
+            "type": "list",
+            "header": {
+                "type": "text",
+                "text": "Prospectives Menu"
+            },
+            "body": {
+                "text": "You selected *Prospectives*. Here's what you need to know about admissions and programs. Please select an option:"
+            },
+            "footer": {
+                "text": "AskJo - St. Joseph University"
+            },
+            "action": {
+                "button": "Select Option",
+                "sections": [
+                    {
+                        "title": "Prospectives Options",
+                        "rows": [
+                            {
+                                "id": "about_us",
+                                "title": "About Us",
+                                "description": "Learn more about St. Joseph University"
+                            },
+                            {
+                                "id": "our_programs",
+                                "title": "Our Programs",
+                                "description": "Available at our campus"
+                            },
+                            {
+                                "id": "online_applications",
+                                "title": "Online Applications",
+                                "description": "Register for our various online programs"
+                            },
+                            {
+                                "id": "our_contacts",
+                                "title": "Our Contacts",
+                                "description": "Get more information and live support"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
+    print("Prospectives menu response:", response.status_code, response.json())
+    return response.json()

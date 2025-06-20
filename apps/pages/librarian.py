@@ -1,4 +1,6 @@
 import json
+import os
+from django.conf import settings
 from django.shortcuts import render,redirect
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate, login
@@ -17,6 +19,8 @@ from django.http import JsonResponse, HttpResponseNotAllowed
 from datetime import date
 from django.shortcuts import get_object_or_404
 from .models import Book, Penalty  
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
 def librarian_home(request):
     total_books = Book.objects.count()  
@@ -208,12 +212,23 @@ def add_past_paper(request):
     if request.method == 'POST':
         form = PastPaperForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            pdf_file = request.FILES['pdf']  # Replace with your actual field name
+
+            # Define path to save file
+            save_path = os.path.join(settings.BASE_DIR, 'static', 'pdf', pdf_file.name)
+
+            # Save file manually
+            path = default_storage.save(save_path, ContentFile(pdf_file.read()))
+
+            # Now save the model but **without** the file field or set file field path manually if needed
+            past_paper = form.save(commit=False)
+            past_paper.pdf_field = 'pdf/' + pdf_file.name  # Assuming your model's field stores relative path inside static
+            past_paper.save()
+
             return redirect('past_paper_list')
     else:
         form = PastPaperForm()
     return render(request, 'librarian/add_past_paper.html', {'form': form, 'departments': departments})
-
 
 def past_paper_list(request):
     papers = PastPaper.objects.all()
