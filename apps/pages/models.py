@@ -219,6 +219,14 @@ class PastPaper(models.Model):
         return f"{self.title} ({self.published_year})"
 
 
+class Announcement(models.Model):
+    title = models.CharField(max_length=200)
+    body = models.TextField()  # This field is missing based on the error
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+    
 # -------------------------
 # Cafeteria Products
 # -------------------------

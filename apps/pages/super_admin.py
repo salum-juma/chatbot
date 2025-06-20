@@ -7,7 +7,7 @@ from django.db.models import Q
 
 from apps.pages.helpers.library.forms import BookForm, SuggestionForm
 from apps.pages.helpers.super_admin.super_admin_form import AddUserForm
-from apps.pages.models import Book, Suggestion, Author, Department, User, Student
+from apps.pages.models import Announcement, Book, Suggestion, Author, Department, User, Student
 from apps.pages.whatsapp.utils.sms_logic import send_sms
 
 
@@ -114,3 +114,24 @@ def view_all_users(request):
     # select_related with 'student_profile' to avoid extra queries
     users = User.objects.all().select_related('student_profile')
     return render(request, 'super_admin/view_users.html', {'users': users})
+
+
+
+def announcements_page(request):
+    announcements = Announcement.objects.order_by('-created_at')
+    return render(request, 'super_admin/announcements.html', {'announcements': announcements})
+
+def add_announcement(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        body = request.POST.get('body')
+
+        if title and body:
+            Announcement.objects.create(title=title, body=body)
+            messages.success(request, '📢 Announcement added successfully.')
+            return redirect('add_announcement')
+        else:
+            messages.error(request, '⚠️ Title and body are required.')
+
+    announcements = Announcement.objects.all().order_by('-created_at')
+    return render(request, 'super_admin/announcements.html', {'announcements': announcements})

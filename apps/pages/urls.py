@@ -38,6 +38,8 @@ urlpatterns = [
     # Super admin routes
     path('add-user-page', super_admin.add_user_page, name='add_user_page'),
     path('super_admin/view-users/', super_admin.view_all_users, name='view_all_users'),
+    path('announcements/', super_admin.announcements_page, name='announcements'),
+    path('announcements/add/', super_admin.add_announcement, name='add_announcement'),
 
 
     # whatsapp
