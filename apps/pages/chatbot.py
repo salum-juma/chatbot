@@ -2,16 +2,13 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 import json
 from apps.pages.models import Announcement, ChatSession
+from apps.pages.whatsapp.handlers.announcement_handler import handle_announcement_menu, handle_announcement_selection
 from apps.pages.whatsapp.handlers.language_handler import handle_language_selection
 from apps.pages.whatsapp.handlers.english_handler import handle_english_flow
 from apps.pages.whatsapp.handlers.swahili_handler import handle_swahili_flow
 from apps.pages.whatsapp.handlers.library_handler import handle_library_flow
 from apps.pages.whatsapp.handlers.login_handler import handle_login_flow
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
-from apps.pages.whatsapp.handlers.announcement_handler import (
-    handle_announcement_menu,
-    handle_announcement_selection
-)
 
 @csrf_exempt
 def whatsapp_webhook(request):
