@@ -1,7 +1,7 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 import json
-from apps.pages.models import ChatSession
+from apps.pages.models import Announcement, ChatSession
 from apps.pages.whatsapp.handlers.language_handler import handle_language_selection
 from apps.pages.whatsapp.handlers.english_handler import handle_english_flow
 from apps.pages.whatsapp.handlers.swahili_handler import handle_swahili_flow
@@ -84,7 +84,16 @@ def whatsapp_webhook(request):
             # --- Student Portal Main Menu ---
             if session.stage == 'student_portal_main':
                 if text == "student_announcements":
-                    send_whatsapp_message(phone_number_id, from_number, "📢 Latest announcements coming soon...")
+                    announcements = Announcement.objects.order_by('-created_at')[:5]
+
+                    if announcements.exists():
+                        msg = "*📢 Latest Announcements:*\n\n"
+                        for ann in announcements:
+                            msg += f"🔹 *{ann.title}*\n{ann.body}\n🕒 {ann.created_at.strftime('%b %d, %Y %H:%M')}\n\n"
+                        send_whatsapp_message(phone_number_id, from_number, msg.strip())
+                    else:
+                        send_whatsapp_message(phone_number_id, from_number, "📭 No announcements at the moment.")
+
                     return HttpResponse("Sent announcements", status=200)
 
                 if text == "student_library":
