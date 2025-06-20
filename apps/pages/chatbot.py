@@ -81,7 +81,7 @@ def whatsapp_webhook(request):
             if session.stage and session.stage.startswith('awaiting_'):
                 return handle_login_flow(text, phone_number_id, from_number, session)
 
-            # --- Student Portal Main Menu ---
+            
             if session.stage == 'student_portal_main':
                 if text == "student_announcements":
                     return handle_announcement_menu(phone_number_id, from_number)
