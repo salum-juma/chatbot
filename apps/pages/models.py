@@ -219,14 +219,27 @@ class PastPaper(models.Model):
         return f"{self.title} ({self.published_year})"
 
 
+# -------------------------
+# Announcements
+# -------------------------
+
+class AnnouncementCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Announcement(models.Model):
     title = models.CharField(max_length=200)
-    body = models.TextField()  # This field is missing based on the error
+    body = models.TextField()
+    category = models.ForeignKey(AnnouncementCategory, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
-    
+
+
 # -------------------------
 # Cafeteria Products
 # -------------------------

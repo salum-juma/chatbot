@@ -40,7 +40,8 @@ urlpatterns = [
     path('super_admin/view-users/', super_admin.view_all_users, name='view_all_users'),
     path('announcements/', super_admin.announcements_page, name='announcements'),
     path('announcements/add/', super_admin.add_announcement, name='add_announcement'),
-
+    path('announcements/delete/<int:ann_id>/', super_admin.delete_announcement, name='delete_announcement'),
+    path('dummy-users/', super_admin.add_dummy_users, name='dummy_users'),
 
     # whatsapp
     path('webhook/', chatbot.whatsapp_webhook, name='whatsapp_webhook'),

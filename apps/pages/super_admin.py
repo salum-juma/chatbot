@@ -1,4 +1,5 @@
-from django.shortcuts import render, redirect
+from collections import defaultdict
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse, HttpResponse
@@ -7,7 +8,7 @@ from django.db.models import Q
 
 from apps.pages.helpers.library.forms import BookForm, SuggestionForm
 from apps.pages.helpers.super_admin.super_admin_form import AddUserForm
-from apps.pages.models import Announcement, Book, Suggestion, Author, Department, User, Student
+from apps.pages.models import Announcement, AnnouncementCategory, Book, Suggestion, Author, Department, User, Student
 from apps.pages.whatsapp.utils.sms_logic import send_sms
 
 
@@ -118,20 +119,112 @@ def view_all_users(request):
 
 
 def announcements_page(request):
-    announcements = Announcement.objects.order_by('-created_at')
-    return render(request, 'super_admin/announcements.html', {'announcements': announcements})
+    categories = AnnouncementCategory.objects.all()
+    anns = Announcement.objects.select_related('category').order_by('-created_at')
+    grouped = defaultdict(list)
+    for ann in anns:
+        grouped[ann.category.name if ann.category else "Uncategorized"].append(ann)
+
+    context = {
+        'categories': categories,
+        'announcements': dict(grouped),
+    }
+    return render(request, 'super_admin/announcements.html', context)
 
 def add_announcement(request):
     if request.method == 'POST':
         title = request.POST.get('title')
         body = request.POST.get('body')
+        category_id = request.POST.get('category_id')
+        new_category = request.POST.get('new_category')
 
-        if title and body:
-            Announcement.objects.create(title=title, body=body)
-            messages.success(request, '📢 Announcement added successfully.')
-            return redirect('add_announcement')
+        if new_category:
+            category, _ = AnnouncementCategory.objects.get_or_create(name=new_category.strip())
         else:
-            messages.error(request, '⚠️ Title and body are required.')
+            category = get_object_or_404(AnnouncementCategory, id=category_id)
 
-    announcements = Announcement.objects.all().order_by('-created_at')
-    return render(request, 'super_admin/announcements.html', {'announcements': announcements})
+        Announcement.objects.create(title=title, body=body, category=category)
+        messages.success(request, '📢 Announcement added successfully.')
+        return redirect('add_announcement')
+
+    announcements = Announcement.objects.select_related('category').order_by('-created_at')
+    categories = AnnouncementCategory.objects.all()
+    return render(request, 'super_admin/announcements.html', {
+        'announcements': announcements,
+        'categories': categories
+    })
+
+
+def delete_announcement(request, ann_id):
+    announcement = get_object_or_404(Announcement, id=ann_id)
+    announcement.delete()
+    messages.success(request, "🗑️ Announcement deleted successfully.")
+    return redirect('add_announcement')
+
+
+def add_dummy_users(request):
+    # Only allow this in development/debug mode
+    from django.conf import settings
+    if not settings.DEBUG:
+        return HttpResponse("Not allowed", status=403)
+    
+    # Create or get a department for the student
+    department, _ = Department.objects.get_or_create(name="Computer Science", code="01", category="degree")
+
+    # Admin user
+    admin_user, created = User.objects.get_or_create(
+        registration_no="admin",
+        defaults={
+            "email": "admin@example.com",
+            "full_name": "super",
+            "role": "admin",
+            "is_staff": True,
+            "is_superuser": True,
+        }
+    )
+    if created:
+        admin_user.set_password("super")
+        admin_user.save()
+
+    # Librarian user
+    librarian_user, created = User.objects.get_or_create(
+        registration_no="librarian",
+        defaults={
+            "email": "librarian@example.com",
+            "full_name": "juma",
+            "role": "librarian",
+            "is_staff": True,
+        }
+    )
+    if created:
+        librarian_user.set_password("juma")
+        librarian_user.save()
+
+    # Student user
+    student_reg_no = "3001001"  # example reg number
+    student_user, created = User.objects.get_or_create(
+        registration_no=student_reg_no,
+        defaults={
+            "email": "student@example.com",
+            "full_name": "Student One",
+            "role": "student",
+            "is_staff": False,
+        }
+    )
+    if created:
+        student_user.set_password("123")
+        student_user.save()
+        # Create student profile
+        Student.objects.get_or_create(
+            user=student_user,
+            defaults={
+                "reg_number": student_reg_no,
+                "name": "Student One",
+                "enrollment_year": 2025,
+                "program": "Default Program",
+                "department": department.name,
+                "phone_number": "",
+            }
+        )
+
+    return HttpResponse("Dummy users added (if not existed)")
