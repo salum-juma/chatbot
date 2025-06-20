@@ -15,7 +15,7 @@ def handle_announcement_menu(phone_number_id, from_number):
         return HttpResponse("No categories", status=200)
 
     sections = [{
-        "title": "📚 Select Category to View",
+        "title": "📚 Choose Category",
         "rows": [
             {"id": f"ann_category_{cat.id}", "title": cat.name} for cat in categories
         ] + [{"id": "ann_view_all", "title": "📋 View All Announcements"}]
