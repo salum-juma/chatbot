@@ -1,5 +1,5 @@
 from apps.pages.models import Announcement, AnnouncementCategory
-from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_list_message, send_whatsapp_message
+from apps.pages.whatsapp.utils.whatsapp import send_announcement_category, send_whatsapp_list_message, send_whatsapp_message
 from django.http import HttpResponse
 from collections import defaultdict
 
@@ -22,10 +22,12 @@ def handle_announcement_menu(phone_number_id, from_number):
     }]
 
     print("✅ Sending category list to user.")
-    send_whatsapp_list_message(
-        phone_number_id, from_number,
-        body="*📢 Announcements*\n\nTap a category below to view announcements:",
-        sections=sections
+    send_announcement_category(
+    phone_number_id,
+    from_number,
+    body="*📢 Announcements*\n\nTap a category below to view announcements:",
+    button="📂 Categories",
+    sections=sections
     )
     return HttpResponse("Sent announcement menu", status=200)
 

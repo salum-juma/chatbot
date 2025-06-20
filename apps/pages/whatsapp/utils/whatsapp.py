@@ -238,3 +238,38 @@ def send_whatsapp_prospectives_menu(phone_number_id, to):
     response = requests.post(url, headers=headers, json=payload)
     print("Prospectives menu response:", response.status_code, response.json())
     return response.json()
+
+
+def send_announcement_category(phone_number_id, to, body, sections, button="View Options"):
+    url = f"https://graph.facebook.com/v18.0/{phone_number_id}/messages"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": to,
+        "type": "interactive",
+        "interactive": {
+            "type": "list",
+            "header": {
+                "type": "text",
+                "text": "📢 Announcements"
+            },
+            "body": {
+                "text": body
+            },
+            "footer": {
+                "text": "Choose a category below 👇"
+            },
+            "action": {
+                "button": button,
+                "sections": sections
+            }
+        }
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
+    print("List message response:", response.status_code, response.text)
+    return response.json()
