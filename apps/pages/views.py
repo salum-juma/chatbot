@@ -20,7 +20,7 @@ import random
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import User, OTPStorage 
-
+from django.contrib.messages import get_messages
 
 import random
 from django.shortcuts import render, redirect
@@ -123,10 +123,12 @@ def get_student_info(request):
         return JsonResponse({'error': 'Student not found'}, status=404)
 
     
-
 @csrf_exempt
 def index(request):
     if request.method == 'POST':
+        # Clear lingering messages (e.g. announcement success messages)
+        list(get_messages(request))  # This clears any previously stored messages
+
         if request.content_type == 'application/json':
             try:
                 data = json.loads(request.body)
