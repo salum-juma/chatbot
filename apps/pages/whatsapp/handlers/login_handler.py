@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from apps.pages.whatsapp.utils.menu import send_student_services_menu
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message, send_whatsapp_list_message
 from django.http import HttpResponse
 
@@ -18,24 +19,7 @@ def handle_login_flow(text, phone_number_id, from_number, session):
         if user:
             session.stage = 'student_portal_main'
             session.save()
-
-            sections = [{
-                "title": "📚 Student Services",
-                "rows": [
-                    {"id": "student_announcements", "title": "📢 Announcements", "description": "Be updated on current news/events."},
-                    {"id": "student_library", "title": "📚 Library Management", "description": "Search and find books easily."},
-                    {"id": "student_inquiries", "title": "❓ Student Inquiries", "description": "View answers to common questions."},
-                    {"id": "student_guidelines", "title": "📖 Guidelines", "description": "Steps for various university processes."},
-                    {"id": "student_cafeteria", "title": "🍽️ Cafeteria", "description": "Order from the university restaurant."},
-                    {"id": "back_to_main_menu", "title": "🔙 Rudi Menyu Kuu", "description": "Return to the main menu."}
-                ]
-            }]
-
-            send_whatsapp_list_message(
-                phone_number_id, from_number,
-                body="🎓 *Welcome to Student Portal!*\n\nPlease select a service to continue:",
-                sections=sections
-            )
+            send_student_services_menu(phone_number_id, from_number)
             return HttpResponse("Login success", status=200)
         else:
             session.stage = 'awaiting_password_retry'

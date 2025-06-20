@@ -1,6 +1,7 @@
 from django.db.models import Q
 from django.http import HttpResponse
 from apps.pages.models import Book, PastPaper, Department, Student
+from apps.pages.whatsapp.utils.menu import send_student_services_menu
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message, send_whatsapp_list_message
 
 
@@ -74,7 +75,7 @@ def handle_library_flow(text, phone_number_id, from_number, session):
         elif text == "library_back_to_main":
             session.stage = "student_portal_main"
             session.save()
-            send_whatsapp_message(phone_number_id, from_number, "🔙 Returning to the main menu.")
+            send_student_services_menu(phone_number_id, from_number)
             return HttpResponse("Returned to main menu", status=200)
 
         else:
