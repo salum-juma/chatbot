@@ -1,0 +1,86 @@
+
+<!-- menu item -->
+ {% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meal Menu</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background-color: #343a40;
+        }
+
+        .sidebar .nav-link {
+            color: #fff;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: #495057;
+        }
+
+        .card {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                {% include 'canteen/partial/sidebar.html' %}
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-3">
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom">
+                    <h2>Add New Menu Item</h2>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                       <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">Meal Name</label>
+            <input type="text" name="name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Price (TZS)</label>
+            <input type="number" name="price" step="0.01" class="form-control" required>
+        </div>
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="available" id="available" checked>
+            <label class="form-check-label" for="available">Available</label>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Meal</button>
+        <a href="{% url 'menu_page' %}" class="btn btn-secondary">Back</a>
+    </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

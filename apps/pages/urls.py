@@ -1,5 +1,7 @@
 from django.shortcuts import redirect
 from django.urls import path
+
+from apps.pages import canteen
 from . import super_admin, student, views, librarian,chatbot
 from django.conf import settings
 from django.conf.urls.static import static
@@ -22,14 +24,13 @@ urlpatterns = [
     path('librarian/books/<int:book_id>/delete/', librarian.delete_book, name='delete_book'),
     path('librarian/books/<int:book_id>/render/', librarian.render_book, name='render_book'),
     path('books/<int:book_id>/set_available/', librarian.set_book_available, name='set_book_available'),
-    path('librarian/get-student-info/', views.get_student_info, name='get_student_info'),  # if this remains in views
+    path('librarian/get-student-info/', views.get_student_info, name='get_student_info'),
     path('librarian/penalties/', librarian.view_penalties, name='view_penalties'),
 
     path('past-papers/', librarian.past_papers, name='past_paper_list'),
     path('past-papers/add/', librarian.add_past_paper, name='add_past_paper'),
     path('past-papers/delete/<int:pk>/', librarian.delete_past_paper, name='delete_past_paper'),
-
-
+    
 
     # Suggestions
     path('suggestions/', views.suggestion_page, name='suggestion_page'),
@@ -49,5 +50,11 @@ urlpatterns = [
     path('verify-otp/', views.verify_otp, name='verify_otp'),
     path('reset-password/', views.reset_password, name='reset_password'),
 
+
+    # canteen
+    path('canteen/home', canteen.canteen_home, name='canteen_home'),
+    path('canteen/menu/', canteen.menu_page, name='menu_page'),
+    path('canteen/menu/add/', canteen.add_menu_item, name='add_menu_item'),
+    path('canteen/menu-item/delete/<int:pk>/', canteen.delete_menu_item, name='delete_menu_item'),
 
         ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

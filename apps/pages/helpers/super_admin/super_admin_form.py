@@ -10,6 +10,7 @@ class AddUserForm(forms.Form):
             ('degree_student', 'Degree Student'),
             ('diploma_student', 'Diploma Student'),
             ('librarian', 'Librarian'),
+            ('canteen', 'Canteen'),
             ('admin', 'Admin'),
         ],
         required=True

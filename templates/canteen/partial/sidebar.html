@@ -1,0 +1,28 @@
+<div class="position-sticky pt-3">
+    <h6 class="text-light px-3 mb-3">Menu</h6>
+    <ul class="nav flex-column">
+        <!-- Dashboard Link - Added First -->
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
+                href="{% url 'home' %}">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+        </li>
+
+        <!-- Add Book Link -->
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'add_book' %}active{% endif %}"
+                href="{% url 'menu_page' %}">
+                <i class="fas fa-utensils"></i> Add Menu
+            </a>
+        </li>
+
+
+        <!-- Logout Link -->
+        <li class="nav-item">
+            <a class="nav-link text-white" href="{% url 'logout-user' %}">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </li>
+    </ul>
+</div>
