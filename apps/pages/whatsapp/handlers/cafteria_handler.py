@@ -24,8 +24,9 @@ def handle_cafeteria_flow(text, phone_number_id, from_number, session):
         send_whatsapp_message(
             phone_number_id,
             from_number,
-            f"🍽️ How many servings of *{meal.name}* would you like?"
+            f"🍽️ How many servings of *{meal.name}* would you like?\n\n👉 Please enter a number (e.g. 1, 2, 3...)"
         )
+
         print("[CAFETERIA] Asked for quantity")
         return HttpResponse("Asking quantity", status=200)
 
