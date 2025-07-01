@@ -248,7 +248,33 @@ class MenuItem(models.Model):
 
     def __str__(self):
         return self.name
-    
+
+class MealOrder(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('verified', 'Verified'),
+    ]
+
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    ordered_at = models.DateTimeField(default=timezone.now)
+    total_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    token = models.CharField(max_length=10, blank=True, null=True)  # unique meal token
+    verified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, limit_choices_to={'role': 'librarian'})  # cook
+    verified_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.student.reg_number} - {self.status} - {self.ordered_at.strftime('%Y-%m-%d %H:%M')}"
+
+class MealOrderItem(models.Model):
+    order = models.ForeignKey(MealOrder, related_name='items', on_delete=models.CASCADE)
+    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+
+    def __str__(self):
+        return f"{self.menu_item.name} x {self.quantity}"
+ 
 # -------------------------
 # Cafeteria Products
 # -------------------------

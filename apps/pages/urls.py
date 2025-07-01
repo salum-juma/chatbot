@@ -56,5 +56,8 @@ urlpatterns = [
     path('canteen/menu/', canteen.menu_page, name='menu_page'),
     path('canteen/menu/add/', canteen.add_menu_item, name='add_menu_item'),
     path('canteen/menu-item/delete/<int:pk>/', canteen.delete_menu_item, name='delete_menu_item'),
+    path('canteen/orders/', canteen.orders_page, name='orders_page'),
+    path('canteen/orders/<int:order_id>/approve/', canteen.approve_order, name='approve_order'),
+    path('canteen/orders/served/<int:order_id>/', canteen.mark_order_served, name='mark_order_served'),
 
         ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

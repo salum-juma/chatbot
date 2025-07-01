@@ -17,6 +17,13 @@
             </a>
         </li>
 
+         <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'orders_page' %}active{% endif %}"
+               href="{% url 'orders_page' %}">
+                <i class="fas fa-receipt"></i> View Orders
+            </a>
+        </li>
+
 
         <!-- Logout Link -->
         <li class="nav-item">
