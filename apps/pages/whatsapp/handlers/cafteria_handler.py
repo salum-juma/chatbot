@@ -8,6 +8,8 @@ from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_list_message, send_
 
 
 def handle_cafeteria_flow(text, phone_number_id, from_number, session):
+    print(f"Cafeteria handler called with stage={session.stage}, text={text}")
+
     if text == "student_cafeteria":
         session.stage = 'cafeteria_selecting_item'
         session.save()
@@ -85,8 +87,8 @@ def handle_cafeteria_flow(text, phone_number_id, from_number, session):
             send_whatsapp_message(phone_number_id, from_number, msg)
             return HttpResponse("Order placed", status=200)
 
+    print("Cafeteria handler: unrecognized input")
     return None
-
 
 def send_menu_items(phone_number_id, from_number):
     menu_items = MenuItem.objects.filter(available=True)

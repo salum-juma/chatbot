@@ -1,17 +1,15 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 import json
-from apps.pages.models import Announcement, ChatSession
-from apps.pages.whatsapp.handlers.announcement_handler import handle_announcement_menu, handle_announcement_selection
+from apps.pages.models import ChatSession
 from apps.pages.whatsapp.handlers.cafteria_handler import handle_cafeteria_flow
 from apps.pages.whatsapp.handlers.language_handler import handle_language_selection
 from apps.pages.whatsapp.handlers.english_handler import handle_english_flow
 from apps.pages.whatsapp.handlers.swahili_handler import handle_swahili_flow
+from apps.pages.whatsapp.handlers.announcement_handler import handle_announcement_menu, handle_announcement_selection
 from apps.pages.whatsapp.handlers.library_handler import handle_library_flow
 from apps.pages.whatsapp.handlers.login_handler import handle_login_flow
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
-
-
 
 
 @csrf_exempt
@@ -47,8 +45,12 @@ def whatsapp_webhook(request):
             else:
                 text = message.get("text", {}).get("body", "").lower()
 
-            # Get or create session
-            session, _ = ChatSession.objects.get_or_create(phone_number=from_number)
+            # Get or create session and force reload from DB for latest stage
+            session, created = ChatSession.objects.get_or_create(phone_number=from_number)
+            session.refresh_from_db()
+
+            # Debug print for session stage
+            print(f"Webhook received message: '{text}', session stage: '{session.stage}'")
 
             # Avoid duplicate processing
             if session.last_message_id == message_id:
@@ -85,6 +87,7 @@ def whatsapp_webhook(request):
             if session.stage and session.stage.startswith('awaiting_'):
                 return handle_login_flow(text, phone_number_id, from_number, session)
 
+            # --- Main student portal stages ---
             if session.stage == 'student_portal_main':
                 if text == "student_announcements":
                     return handle_announcement_menu(phone_number_id, from_number)
@@ -106,9 +109,7 @@ def whatsapp_webhook(request):
                     return HttpResponse("Sent guidelines", status=200)
 
                 if text == "student_cafeteria" or (session.stage and session.stage.startswith("cafeteria_")):
-                    print(f"Calling cafeteria handler with stage={session.stage}, text={text}")
                     return handle_cafeteria_flow(text, phone_number_id, from_number, session)
-
 
                 if text == "back_to_main_menu":
                     send_whatsapp_message(phone_number_id, from_number, "🔙 Back to the main menu.")
