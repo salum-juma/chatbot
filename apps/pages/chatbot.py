@@ -106,7 +106,9 @@ def whatsapp_webhook(request):
                     return HttpResponse("Sent guidelines", status=200)
 
                 if text == "student_cafeteria" or (session.stage and session.stage.startswith("cafeteria_")):
+                    print(f"Calling cafeteria handler with stage={session.stage}, text={text}")
                     return handle_cafeteria_flow(text, phone_number_id, from_number, session)
+
 
                 if text == "back_to_main_menu":
                     send_whatsapp_message(phone_number_id, from_number, "🔙 Back to the main menu.")
