@@ -79,9 +79,9 @@ def approve_order(request, order_id):
 
     # Send SMS (placeholder logic)
     message = f"Your food order has been approved. Use token {token} to collect."
-    print(f"Sending SMS to {order.student.phone_number}: {message}")
+    print(f"Sending SMS to {order.phone_number}: {message}")
 
-    messages.success(request, f"Order approved and token sent to {order.student.phone_number}.")
+    messages.success(request, f"Order approved and token sent to {order.phone_number}.")
     return redirect('orders_page')
 
 

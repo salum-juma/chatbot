@@ -80,10 +80,10 @@ def handle_cafeteria_flow(text, phone_number_id, from_number, session):
 
             order = MealOrder.objects.create(
                 student=student,
-                phone_number=from_number,
-                payment_reference=ref,
+                phone_number=from_number, 
                 total_amount=total
             )
+
 
             for item in cart:
                 meal = MenuItem.objects.get(id=item['meal_id'])
