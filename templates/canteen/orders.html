@@ -93,11 +93,11 @@
                                     <tr>
                                         <td>{{ forloop.counter }}</td>
                                         <td>{{ order.id }}</td>
-                                        <td>{{ order.phone_number }}</td>
+                                        <td>{{ order.student.phone_number }}</td>
                                         <td>
                                             <ul class="mb-0">
                                                 {% for item in order.items_list %}
-                                                <li>{{ item.meal.name }} x {{ item.quantity }}</li>
+                                                <li>{{ item.menu_item.name }} x {{ item.quantity }}</li>
                                                 {% endfor %}
                                             </ul>
                                         </td>

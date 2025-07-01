@@ -56,15 +56,17 @@ def orders_page(request):
 
     if query:
         orders = orders.filter(
-            Q(phone_number__icontains=query) |
+            Q(student__reg_number__icontains=query) |
             Q(id__icontains=query) |
             Q(token__icontains=query)
         )
 
     orders = orders.order_by('-ordered_at')
+
     for order in orders:
         order.items_list = MealOrderItem.objects.filter(order=order)
-        order.total = sum(item.meal.price * item.quantity for item in order.items_list)
+        order.total = sum(item.menu_item.price * item.quantity for item in order.items_list)
+
     return render(request, 'canteen/orders.html', {'orders': orders, 'query': query})
 
 
@@ -75,11 +77,11 @@ def approve_order(request, order_id):
     order.status = 'approved'
     order.save()
 
-    # Send SMS (dummy logic for now, integrate with SMS gateway)
+    # Send SMS (placeholder logic)
     message = f"Your food order has been approved. Use token {token} to collect."
-    print(f"Sending SMS to {order.phone_number}: {message}")
+    print(f"Sending SMS to {order.student.phone_number}: {message}")
 
-    messages.success(request, f"Order approved and token sent to {order.phone_number}.")
+    messages.success(request, f"Order approved and token sent to {order.student.phone_number}.")
     return redirect('orders_page')
 
 
