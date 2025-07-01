@@ -13,6 +13,7 @@ from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
 
 
 @csrf_exempt
+@csrf_exempt
 def whatsapp_webhook(request):
     if request.method == 'GET':
         verify_token = 'developernkya'
@@ -45,12 +46,8 @@ def whatsapp_webhook(request):
             else:
                 text = message.get("text", {}).get("body", "").lower()
 
-            # Get or create session and force reload from DB for latest stage
-            session, created = ChatSession.objects.get_or_create(phone_number=from_number)
-            session.refresh_from_db()
-
-            # Debug print for session stage
-            print(f"Webhook received message: '{text}', session stage: '{session.stage}'")
+            # Get or create session
+            session, _ = ChatSession.objects.get_or_create(phone_number=from_number)
 
             # Avoid duplicate processing
             if session.last_message_id == message_id:
@@ -87,7 +84,7 @@ def whatsapp_webhook(request):
             if session.stage and session.stage.startswith('awaiting_'):
                 return handle_login_flow(text, phone_number_id, from_number, session)
 
-            # --- Main student portal stages ---
+            # --- Main Portal and Features ---
             if session.stage == 'student_portal_main':
                 if text == "student_announcements":
                     return handle_announcement_menu(phone_number_id, from_number)
@@ -109,7 +106,9 @@ def whatsapp_webhook(request):
                     return HttpResponse("Sent guidelines", status=200)
 
                 if text == "student_cafeteria" or (session.stage and session.stage.startswith("cafeteria_")):
-                    return handle_cafeteria_flow(text, phone_number_id, from_number, session)
+                    response = handle_cafeteria_flow(text, phone_number_id, from_number, session)
+                    if response:
+                        return response
 
                 if text == "back_to_main_menu":
                     send_whatsapp_message(phone_number_id, from_number, "🔙 Back to the main menu.")

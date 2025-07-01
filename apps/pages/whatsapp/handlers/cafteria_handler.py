@@ -1,18 +1,17 @@
 # handlers/cafeteria_handler.py
 
-
 import uuid
 from django.http import HttpResponse
 from apps.pages.models import MealOrder, MealOrderItem, MenuItem
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_list_message, send_whatsapp_message
 
-
 def handle_cafeteria_flow(text, phone_number_id, from_number, session):
-    print(f"Cafeteria handler called with stage={session.stage}, text={text}")
+    print(f"[CAFETERIA] Handling text='{text}', stage='{session.stage}'")
 
     if text == "student_cafeteria":
         session.stage = 'cafeteria_selecting_item'
         session.save()
+        print("[CAFETERIA] Sending menu items")
         return send_menu_items(phone_number_id, from_number)
 
     elif session.stage == 'cafeteria_selecting_item' and text.startswith("meal_select_"):
@@ -27,6 +26,7 @@ def handle_cafeteria_flow(text, phone_number_id, from_number, session):
             from_number,
             f"🍽️ How many servings of *{meal.name}* would you like?"
         )
+        print("[CAFETERIA] Asked for quantity")
         return HttpResponse("Asking quantity", status=200)
 
     elif session.stage == 'cafeteria_entering_quantity' and text.isdigit():
@@ -50,12 +50,14 @@ def handle_cafeteria_flow(text, phone_number_id, from_number, session):
                 ]
             }]
         )
+        print("[CAFETERIA] Asked add more or finish")
         return HttpResponse("Ask add more or finish", status=200)
 
     elif session.stage == 'cafeteria_adding_more_or_done':
         if text == "add_another_item":
             session.stage = 'cafeteria_selecting_item'
             session.save()
+            print("[CAFETERIA] Adding another item - sending menu")
             return send_menu_items(phone_number_id, from_number)
 
         elif text == "finish_order":
@@ -85,10 +87,13 @@ def handle_cafeteria_flow(text, phone_number_id, from_number, session):
             msg += f"\n✅ Pay via M-Pesa to: 07XXXXXXXX\n🧾 Use reference: *{ref}*"
 
             send_whatsapp_message(phone_number_id, from_number, msg)
+            print("[CAFETERIA] Order placed and payment info sent")
             return HttpResponse("Order placed", status=200)
 
-    print("Cafeteria handler: unrecognized input")
-    return None
+    # If no condition matched, return a default HttpResponse (avoid None)
+    print("[CAFETERIA] No matching condition - returning 200 OK")
+    return HttpResponse("OK", status=200)
+
 
 def send_menu_items(phone_number_id, from_number):
     menu_items = MenuItem.objects.filter(available=True)
@@ -109,4 +114,5 @@ def send_menu_items(phone_number_id, from_number):
             "rows": rows
         }]
     )
+    print("[CAFETERIA] Sent menu list message")
     return HttpResponse("Menu sent", status=200)
