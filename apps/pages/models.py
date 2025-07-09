@@ -249,6 +249,14 @@ class MenuItem(models.Model):
     available = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    parent = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        related_name='subitems',
+        on_delete=models.CASCADE
+    )
+
     def __str__(self):
         return self.name
 

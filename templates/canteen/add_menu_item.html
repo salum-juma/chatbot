@@ -53,27 +53,43 @@
 
                 <div class="card">
                     <div class="card-body">
-                       <form method="post">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label class="form-label">Meal Name</label>
-            <input type="text" name="name" class="form-control" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea name="description" class="form-control"></textarea>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Price (TZS)</label>
-            <input type="number" name="price" step="0.01" class="form-control" required>
-        </div>
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" name="available" id="available" checked>
-            <label class="form-check-label" for="available">Available</label>
-        </div>
-        <button type="submit" class="btn btn-primary">Add Meal</button>
-        <a href="{% url 'menu_page' %}" class="btn btn-secondary">Back</a>
-    </form>
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Meal Name</label>
+                            <input type="text" name="name" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Price (TZS)</label>
+                            <input type="number" name="price" step="0.01" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Parent Menu (optional for sub-meal)</label>
+                            <select name="parent" class="form-select">
+                                <option value="">-- None (Main Menu) --</option>
+                                {% for item in all_menu_items %}
+                                    <option value="{{ item.id }}">{{ item.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="available" id="available" checked>
+                            <label class="form-check-label" for="available">Available</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Add Meal</button>
+                        <a href="{% url 'menu_page' %}" class="btn btn-secondary">Back</a>
+                    </form>
+
                     </div>
                 </div>
             </main>

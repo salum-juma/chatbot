@@ -31,6 +31,12 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             border: none;
         }
+
+        .nested-subitem {
+            margin-left: 20px;
+            font-size: 0.9rem;
+            color: #555;
+        }
     </style>
 </head>
 
@@ -69,14 +75,23 @@
                                         <th>Description</th>
                                         <th>Price (TZS)</th>
                                         <th>Status</th>
-                                        <th>Action</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for item in menu_items %}
                                     <tr>
                                         <td>{{ forloop.counter }}</td>
-                                        <td>{{ item.name }}</td>
+                                        <td>
+                                            {{ item.name }}
+                                            {% if item.subitems.exists %}
+                                                <ul class="list-unstyled">
+                                                    {% for sub in item.subitems.all %}
+                                                    <li class="nested-subitem">↳ {{ sub.name }} - {{ sub.price }} TZS</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% endif %}
+                                        </td>
                                         <td>{{ item.description }}</td>
                                         <td>{{ item.price }}</td>
                                         <td>
@@ -86,17 +101,25 @@
                                             <span class="badge bg-secondary">Unavailable</span>
                                             {% endif %}
                                         </td>
-                                         <td>
-                                            <a href="{% url 'delete_menu_item' item.id %}"
-                                                class="btn btn-danger btn-sm"
-                                                onclick="return confirm('Delete this menu item?');">
+                                        <td>
+                                            <a href="{% url 'delete_menu_item' item.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this menu item?');">
                                                 <i class="fas fa-trash-alt"></i>
                                             </a>
+                                            <form method="post" action="{% url 'toggle_availability' item.id %}" style="display: inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-warning btn-sm">
+                                                    {% if item.available %}
+                                                        Mark Unavailable
+                                                    {% else %}
+                                                        Mark Available
+                                                    {% endif %}
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted">No menu items added yet.</td>
+                                        <td colspan="6" class="text-center text-muted">No menu items added yet.</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>

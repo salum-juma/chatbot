@@ -1,10 +1,3 @@
-# handlers/cafeteria_handler.py
-
-import uuid
-from django.http import HttpResponse
-from apps.pages.models import MealOrder, MealOrderItem, MenuItem, Student
-from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_list_message, send_whatsapp_message
-
 import uuid
 from django.http import HttpResponse
 from apps.pages.models import MealOrder, MealOrderItem, MenuItem, Student
@@ -34,6 +27,33 @@ def handle_cafeteria_flow(text, phone_number_id, from_number, session):
 
         print("[CAFETERIA] Asked for quantity")
         return HttpResponse("Asking quantity", status=200)
+
+    elif session.stage == 'cafeteria_selecting_item' and text.startswith("meal_category_"):
+        parent_id = text.replace("meal_category_", "")
+        sub_items = MenuItem.objects.filter(parent_id=parent_id, available=True)
+
+        if not sub_items.exists():
+            send_whatsapp_message(phone_number_id, from_number, "⚠️ No options found under this category.")
+            return HttpResponse("No subitems", status=200)
+
+        rows = []
+        for sub in sub_items:
+            rows.append({
+                "id": f"meal_select_{sub.id}",
+                "title": sub.name,
+                "description": f"TZS {sub.price}"
+            })
+
+        send_whatsapp_list_message(
+            phone_number_id,
+            from_number,
+            body="🍛 *Meal Options*\nPlease choose a variation:",
+            sections=[{
+                "title": "Options",
+                "rows": rows
+            }]
+        )
+        return HttpResponse("Sent subitem options", status=200)
 
     elif session.stage == 'cafeteria_entering_quantity' and text.isdigit():
         quantity = int(text)
@@ -130,21 +150,28 @@ def handle_cafeteria_flow(text, phone_number_id, from_number, session):
     return HttpResponse("OK", status=200)
 
 def send_menu_items(phone_number_id, from_number):
-    menu_items = MenuItem.objects.filter(available=True)
+    top_level_items = MenuItem.objects.filter(parent__isnull=True, available=True)
     rows = []
-    for item in menu_items:
-        rows.append({
-            "id": f"meal_select_{item.id}",
-            "title": item.name,
-            "description": f"TZS {item.price}"
-        })
+    for item in top_level_items:
+        if item.subitems.filter(available=True).exists():
+            rows.append({
+                "id": f"meal_category_{item.id}",
+                "title": item.name,
+                "description": "➡️ View options"
+            })
+        else:
+            rows.append({
+                "id": f"meal_select_{item.id}",
+                "title": item.name,
+                "description": f"TZS {item.price}"
+            })
 
     send_whatsapp_list_message(
         phone_number_id,
         from_number,
         body="🍽️ *Available Meals*\nPlease choose one:",
         sections=[{
-            "title": "Menu Items",
+            "title": "Main Menu",
             "rows": rows
         }]
     )
