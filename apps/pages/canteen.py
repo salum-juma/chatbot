@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.utils import timezone
 from apps.pages.models import Author, Book, Department, MealOrder, MealOrderItem, MenuItem
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
+from django.views.decorators.csrf import csrf_exempt
 
 
 def canteen_home(request):
@@ -74,7 +75,7 @@ def orders_page(request):
     return render(request, 'canteen/orders.html', {'orders': orders, 'query': query})
 
 
-
+@csrf_exempt
 def approve_order(request, order_id):
     order = get_object_or_404(MealOrder, id=order_id)
 
@@ -94,7 +95,6 @@ def approve_order(request, order_id):
             if order.phone_number_id:
                 send_whatsapp_message(order.phone_number_id, order.phone_number, msg)
             else:
-                # Log or handle missing phone_number_id case
                 print("Warning: phone_number_id missing for order", order.id)
 
             messages.success(request, f"Order approved and WhatsApp message sent to {order.phone_number}.")
@@ -102,9 +102,24 @@ def approve_order(request, order_id):
             messages.error(request, f"Error approving order: {str(e)}")
         return redirect('orders_page')
 
-    return render(request, 'canteen/approve_order_form.html', {'order': order})
+    return redirect('orders_page')
 
 
+@csrf_exempt
+def update_ready_time(request, order_id):
+    order = get_object_or_404(MealOrder, id=order_id)
+    if request.method == 'POST':
+        ready_in_minutes = request.POST.get('ready_in_minutes')
+        try:
+            order.ready_time = timezone.now() + timezone.timedelta(minutes=int(ready_in_minutes))
+            order.save()
+            messages.success(request, f"Ready time updated for order #{order.id}.")
+        except Exception as e:
+            messages.error(request, f"Error updating ready time: {str(e)}")
+        return redirect('orders_page')
+
+
+@csrf_exempt
 def mark_order_served(request, order_id):
     order = get_object_or_404(MealOrder, id=order_id)
 

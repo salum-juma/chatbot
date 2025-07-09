@@ -85,7 +85,8 @@
                                     <th>Total (TZS)</th>
                                     <th>Token</th>
                                     <th>Status</th>
-                                    <th>Transaction Message</th> <!-- ✅ NEW -->
+                                    <th>Transaction Message</th> 
+                                    <th>Ready Time</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -121,12 +122,47 @@
                                         {% endif %}
                                     </td>
                                     <td>
+                                        {% if order.ready_time %}
+                                            <small>{{ order.ready_time|date:"H:i" }}</small>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
                                         {% if order.status == 'paid' %}
-                                            <a href="{% url 'approve_order' order.id %}" class="btn btn-success btn-sm mb-1">
+                                            <!-- Button to trigger modal -->
+                                            <button class="btn btn-success btn-sm mb-1" data-bs-toggle="modal" data-bs-target="#verifyModal{{ order.id }}">
                                                 <i class="fas fa-check"></i> Mark as Verified
-                                            </a>
+                                            </button>
+
+                                            <!-- Modal for setting ready time -->
+                                            <div class="modal fade" id="verifyModal{{ order.id }}" tabindex="-1" aria-labelledby="verifyLabel{{ order.id }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-sm">
+                                                <div class="modal-content">
+                                                <form method="post" action="{% url 'approve_order' order.id %}">
+                                                    {% csrf_token %}
+                                                    <div class="modal-header">
+                                                    <h5 class="modal-title" id="verifyLabel{{ order.id }}">Set Ready Time</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                    <input type="number" class="form-control" name="ready_in_minutes" placeholder="Minutes from now" min="1" required>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                                    </div>
+                                                </form>
+                                                </div>
+                                            </div>
+                                            </div>
                                         {% elif order.status == 'approved' %}
-                                            <a href="{% url 'mark_order_served' order.id %}" class="btn btn-primary btn-sm mb-1">
+                                            <!-- Update button -->
+                                            <form method="post" action="{% url 'update_ready_time' order.id %}" class="mb-1 d-flex">
+                                                {% csrf_token %}
+                                                <input type="number" name="ready_in_minutes" class="form-control form-control-sm me-1" placeholder="Update min" style="width: 80px;" required>
+                                                <button type="submit" class="btn btn-outline-secondary btn-sm">Update</button>
+                                            </form>
+                                            <a href="{% url 'mark_order_served' order.id %}" class="btn btn-primary btn-sm">
                                                 <i class="fas fa-check-double"></i> Mark as Served
                                             </a>
                                         {% else %}
