@@ -193,6 +193,7 @@ class ChatSession(models.Model):
     data = models.JSONField(default=dict, blank=True)
     temp_meal_id = models.CharField(max_length=50, null=True, blank=True)
     temp_data = models.JSONField(null=True, blank=True)
+    temp_order_id = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
         return self.phone_number
