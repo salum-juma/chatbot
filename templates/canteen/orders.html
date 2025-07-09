@@ -121,18 +121,19 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                    {% if order.status == 'pending' %}
-                                        <a href="{% url 'approve_order' order.id %}" class="btn btn-success btn-sm mb-1">
-                                            <i class="fas fa-check"></i> Approve
-                                        </a>
-                                    {% elif order.status == 'paid' %}
-                                        <a href="{% url 'mark_order_served' order.id %}" class="btn btn-primary btn-sm mb-1">
-                                            <i class="fas fa-check-double"></i> Mark as Verified
-                                        </a>
-                                    {% else %}
-                                        <span class="text-muted">No actions</span>
-                                    {% endif %}
-                                </td>
+                                        {% if order.status == 'paid' %}
+                                            <a href="{% url 'approve_order' order.id %}" class="btn btn-success btn-sm mb-1">
+                                                <i class="fas fa-check"></i> Mark as Verified
+                                            </a>
+                                        {% elif order.status == 'approved' %}
+                                            <a href="{% url 'mark_order_served' order.id %}" class="btn btn-primary btn-sm mb-1">
+                                                <i class="fas fa-check-double"></i> Mark as Served
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">No actions</span>
+                                        {% endif %}
+                                    </td>
+
 
                                 </tr>
                                 {% empty %}
