@@ -1,0 +1,149 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Served Meal Orders History</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background-color: #343a40;
+        }
+
+        .sidebar .nav-link {
+            color: #fff;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: #495057;
+        }
+
+        .card {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                {% include 'canteen/partial/sidebar.html' %}
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-3">
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom">
+                    <h2>📜 Served Meal Orders History</h2>
+                    <a href="{% url 'orders_page' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back to Current Orders
+                    </a>
+                </div>
+
+                <!-- Search Form -->
+                <form method="get" class="mb-3">
+                    <div class="input-group">
+                        <input
+                            type="text"
+                            name="q"
+                            value="{{ query }}"
+                            class="form-control"
+                            placeholder="Search by phone number, order ID or token..."
+                            aria-label="Search served orders"
+                        />
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </form>
+
+                <div class="card">
+                    <div class="card-body">
+                        {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                        {% endif %}
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Order ID</th>
+                                        <th>Phone Number</th>
+                                        <th>Items</th>
+                                        <th>Total (TZS)</th>
+                                        <th>Token</th>
+                                        <th>Status</th>
+                                        <th>Transaction Message</th>
+                                        <th>Ready Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order in orders %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ order.id }}</td>
+                                        <td>{{ order.phone_number }}</td>
+                                        <td>
+                                            <ul class="mb-0">
+                                                {% for item in order.items_list %}
+                                                <li>{{ item.menu_item.name }} x {{ item.quantity }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </td>
+                                        <td>{{ order.total }}</td>
+                                        <td>{{ order.token|default:"-" }}</td>
+                                        <td>
+                                            {% if order.status == 'served' %}
+                                            <span class="badge bg-primary">Served</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">Unknown</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if order.transaction_message %}
+                                            <pre style="font-size: 13px; white-space: pre-wrap;">{{ order.transaction_message }}</pre>
+                                            {% else %}
+                                            <span class="text-muted">No message</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if order.ready_time %}
+                                            <small>{{ order.ready_time|date:"Y-m-d H:i" }}</small>
+                                            {% else %}
+                                            <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="9" class="text-center text-muted">No served orders found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

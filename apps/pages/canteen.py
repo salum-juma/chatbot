@@ -56,6 +56,7 @@ def delete_menu_item(request, pk):
 
 def orders_page(request):
     query = request.GET.get('q', '')
+    # Only show orders NOT served
     orders = MealOrder.objects.exclude(status='served')
 
     if query:
@@ -73,6 +74,28 @@ def orders_page(request):
         order.total = sum(item.menu_item.price * item.quantity for item in order.items_list)
 
     return render(request, 'canteen/orders.html', {'orders': orders, 'query': query})
+
+def served_orders_page(request):
+    query = request.GET.get('q', '')
+    # Only show orders with status 'served'
+    orders = MealOrder.objects.filter(status='served')
+
+    if query:
+        orders = orders.filter(
+            Q(student__reg_number__icontains=query) |
+            Q(id__icontains=query) |
+            Q(token__icontains=query) |
+            Q(transaction_message__icontains=query)
+        )
+
+    orders = orders.order_by('-ordered_at')
+
+    for order in orders:
+        order.items_list = MealOrderItem.objects.filter(order=order)
+        order.total = sum(item.menu_item.price * item.quantity for item in order.items_list)
+
+    return render(request, 'canteen/served_orders.html', {'orders': orders, 'query': query})
+
 
 
 @csrf_exempt
@@ -111,9 +134,22 @@ def update_ready_time(request, order_id):
     if request.method == 'POST':
         ready_in_minutes = request.POST.get('ready_in_minutes')
         try:
-            order.ready_time = timezone.now() + timezone.timedelta(minutes=int(ready_in_minutes))
+            new_ready_time = timezone.now() + timezone.timedelta(minutes=int(ready_in_minutes))
+            order.ready_time = new_ready_time
             order.save()
-            messages.success(request, f"Ready time updated for order #{order.id}.")
+
+            # Send notification to user about updated ready time
+            time_str = new_ready_time.strftime('%H:%M')
+            update_msg = (
+                f"⚠️ Sorry, the ready time for your order #{order.id} has been updated to *{time_str}*.\n"
+                "Thank you for your patience and understanding."
+            )
+            if order.phone_number_id:
+                send_whatsapp_message(order.phone_number_id, order.phone_number, update_msg)
+            else:
+                print(f"Warning: phone_number_id missing for order {order.id}")
+
+            messages.success(request, f"Ready time updated for order #{order.id} and notification sent.")
         except Exception as e:
             messages.error(request, f"Error updating ready time: {str(e)}")
         return redirect('orders_page')
@@ -130,5 +166,12 @@ def mark_order_served(request, order_id):
     order.status = 'served'
     order.save()
 
-    messages.success(request, f"Order #{order.id} marked as served.")
+    # Send thank-you WhatsApp message
+    thank_you_msg = "Thank you for dining with us! Enjoy your meal 🍽️."
+    if order.phone_number_id:
+        send_whatsapp_message(order.phone_number_id, order.phone_number, thank_you_msg)
+    else:
+        print(f"Warning: phone_number_id missing for order {order.id}")
+
+    messages.success(request, f"Order #{order.id} marked as served and thank-you message sent.")
     return redirect('orders_page')
