@@ -1,13 +1,16 @@
 import random
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
-from apps.pages.models import Author, Book, Department, MealOrder, MealOrderItem, MenuItem
 from django.db.models import Q
+from django.utils import timezone
+from apps.pages.models import Author, Book, Department, MealOrder, MealOrderItem, MenuItem
+from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
+
 
 def canteen_home(request):
-    total_books = Book.objects.count()  
-    total_authors = Author.objects.count()  
-    total_departments = Department.objects.count()  
+    total_books = Book.objects.count()
+    total_authors = Author.objects.count()
+    total_departments = Department.objects.count()
 
     return render(request, 'canteen/canteen_index.html', {
         'name': 'library',
@@ -58,7 +61,8 @@ def orders_page(request):
         orders = orders.filter(
             Q(student__reg_number__icontains=query) |
             Q(id__icontains=query) |
-            Q(token__icontains=query)
+            Q(token__icontains=query) |
+            Q(transaction_message__icontains=query)
         )
 
     orders = orders.order_by('-ordered_at')
@@ -70,19 +74,35 @@ def orders_page(request):
     return render(request, 'canteen/orders.html', {'orders': orders, 'query': query})
 
 
+
 def approve_order(request, order_id):
     order = get_object_or_404(MealOrder, id=order_id)
-    token = f"TKN{random.randint(1000,9999)}"
-    order.token = token
-    order.status = 'approved'
-    order.save()
 
-    # Send SMS (placeholder logic)
-    message = f"Your food order has been approved. Use token {token} to collect."
-    print(f"Sending SMS to {order.phone_number}: {message}")
+    if request.method == 'POST':
+        ready_in_minutes = request.POST.get('ready_in_minutes')
+        try:
+            token = f"TKN{random.randint(1000,9999)}"
+            order.token = token
+            order.status = 'approved'
+            order.ready_time = timezone.now() + timezone.timedelta(minutes=int(ready_in_minutes))
+            order.save()
 
-    messages.success(request, f"Order approved and token sent to {order.phone_number}.")
-    return redirect('orders_page')
+            msg = (
+                f"✅ Your food order has been approved and will be ready in about {ready_in_minutes} minutes.\n"
+                f"📌 Please come with your token number: *{token}* to collect your meal."
+            )
+            if order.phone_number_id:
+                send_whatsapp_message(order.phone_number_id, order.phone_number, msg)
+            else:
+                # Log or handle missing phone_number_id case
+                print("Warning: phone_number_id missing for order", order.id)
+
+            messages.success(request, f"Order approved and WhatsApp message sent to {order.phone_number}.")
+        except Exception as e:
+            messages.error(request, f"Error approving order: {str(e)}")
+        return redirect('orders_page')
+
+    return render(request, 'canteen/approve_order_form.html', {'order': order})
 
 
 def mark_order_served(request, order_id):

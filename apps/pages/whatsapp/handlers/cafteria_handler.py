@@ -5,6 +5,11 @@ from django.http import HttpResponse
 from apps.pages.models import MealOrder, MealOrderItem, MenuItem, Student
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_list_message, send_whatsapp_message
 
+import uuid
+from django.http import HttpResponse
+from apps.pages.models import MealOrder, MealOrderItem, MenuItem, Student
+from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_list_message, send_whatsapp_message
+
 def handle_cafeteria_flow(text, phone_number_id, from_number, session):
     print(f"[CAFETERIA] Handling text='{text}', stage='{session.stage}'")
 
@@ -60,8 +65,6 @@ def handle_cafeteria_flow(text, phone_number_id, from_number, session):
             session.save()
             print("[CAFETERIA] Adding another item - sending menu")
             return send_menu_items(phone_number_id, from_number)
-        
-        # stars here
 
         elif text == "finish_order":
             cart = session.temp_data or []
@@ -80,34 +83,51 @@ def handle_cafeteria_flow(text, phone_number_id, from_number, session):
 
             order = MealOrder.objects.create(
                 student=student,
-                phone_number=from_number, 
-                total_amount=total
+                phone_number=from_number,
+                phone_number_id=phone_number_id,
+                total_amount=total,
+                status='pending',
+                token=None,
+                transaction_message=None
             )
-
 
             for item in cart:
                 meal = MenuItem.objects.get(id=item['meal_id'])
                 MealOrderItem.objects.create(order=order, menu_item=meal, quantity=item['quantity'])
 
-            session.stage = 'cafeteria_payment_pending'
+            session.stage = 'cafeteria_waiting_payment_message'
             session.temp_meal_id = None
             session.temp_data = None
+            session.temp_order_id = order.id
             session.save()
 
             msg = f"💵 *Order Summary:*\n"
             for item in cart:
                 msg += f"- {item['meal_name']} x {item['quantity']} = TZS {item['quantity'] * item['price']}\n"
             msg += f"\n*Total:* TZS {total}\n"
-            msg += f"\n✅ Pay via M-Pesa to: 07XXXXXXXX\n🧾 Use reference: *{ref}*"
+            msg += f"\n✅ Please pay to M-Pesa number: 07XXXXXXXX\n🧾 Then reply with the *transaction message* you receive."
 
             send_whatsapp_message(phone_number_id, from_number, msg)
-            return HttpResponse("Order placed", status=200)
+            return HttpResponse("Order summary sent, awaiting transaction message", status=200)
 
-    #    ends here
-    # If no condition matched, return a default HttpResponse (avoid None)
+    elif session.stage == 'cafeteria_waiting_payment_message':
+        transaction_msg = text.strip()
+        try:
+            order = MealOrder.objects.get(id=session.temp_order_id)
+            order.transaction_message = transaction_msg
+            order.status = 'paid'
+            order.save()
+            session.stage = 'cafeteria_done'
+            session.temp_order_id = None
+            session.save()
+            send_whatsapp_message(phone_number_id, from_number, "✅ Thank you! Your transaction has been received and is pending verification by the canteen staff.")
+            return HttpResponse("Transaction received", status=200)
+        except MealOrder.DoesNotExist:
+            send_whatsapp_message(phone_number_id, from_number, "⚠️ Could not find your order. Please try again.")
+            return HttpResponse("Order not found", status=400)
+
     print("[CAFETERIA] No matching condition - returning 200 OK")
     return HttpResponse("OK", status=200)
-
 
 def send_menu_items(phone_number_id, from_number):
     menu_items = MenuItem.objects.filter(available=True)

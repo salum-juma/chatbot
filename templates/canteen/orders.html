@@ -76,62 +76,71 @@
 
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover align-middle">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Order ID</th>
-                                        <th>Phone Number</th>
-                                        <th>Items</th>
-                                        <th>Total (TZS)</th>
-                                        <th>Token</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for order in orders %}
-                                    <tr>
-                                        <td>{{ forloop.counter }}</td>
-                                        <td>{{ order.id }}</td>
-                                        <td>{{ order.phone_number }}</td>
-                                        <td>
-                                            <ul class="mb-0">
-                                                {% for item in order.items_list %}
-                                                <li>{{ item.menu_item.name }} x {{ item.quantity }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                        </td>
-                                        <td>{{ order.total }}</td>
-                                        <td>{{ order.token|default:"-" }}</td>
-                                        <td>
-                                            {% if order.status == 'approved' %}
-                                            <span class="badge bg-success">Approved</span>
-                                            {% elif order.status == 'served' %}
-                                            <span class="badge bg-primary">Served</span>
-                                            {% else %}
-                                            <span class="badge bg-warning text-dark">Pending</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if order.status == 'pending' %}
-                                            <a href="{% url 'approve_order' order.id %}" class="btn btn-success btn-sm mb-1">
-                                                <i class="fas fa-check"></i> Approve
-                                            </a>
-                                            {% elif order.status == 'approved' %}
-                                            <a href="{% url 'mark_order_served' order.id %}" class="btn btn-primary btn-sm mb-1">
-                                                <i class="fas fa-check-double"></i> Mark as Served
-                                            </a>
-                                            {% else %}
-                                            <span class="text-muted">No actions</span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="8" class="text-center text-muted">No orders found.</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Order ID</th>
+                                    <th>Phone Number</th>
+                                    <th>Items</th>
+                                    <th>Total (TZS)</th>
+                                    <th>Token</th>
+                                    <th>Status</th>
+                                    <th>Transaction Message</th> <!-- ✅ NEW -->
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ order.id }}</td>
+                                    <td>{{ order.phone_number }}</td>
+                                    <td>
+                                        <ul class="mb-0">
+                                            {% for item in order.items_list %}
+                                            <li>{{ item.menu_item.name }} x {{ item.quantity }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </td>
+                                    <td>{{ order.total }}</td>
+                                    <td>{{ order.token|default:"-" }}</td>
+                                    <td>
+                                        {% if order.status == 'approved' %}
+                                        <span class="badge bg-success">Approved</span>
+                                        {% elif order.status == 'served' %}
+                                        <span class="badge bg-primary">Served</span>
+                                        {% else %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td> <!-- ✅ NEW COLUMN -->
+                                        {% if order.transaction_message %}
+                                        <pre style="font-size: 13px; white-space: pre-wrap;">{{ order.transaction_message }}</pre>
+                                        {% else %}
+                                        <span class="text-muted">No message</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if order.status == 'pending' %}
+                                        <a href="{% url 'approve_order' order.id %}" class="btn btn-success btn-sm mb-1">
+                                            <i class="fas fa-check"></i> Approve
+                                        </a>
+                                        {% elif order.status == 'approved' %}
+                                        <a href="{% url 'mark_order_served' order.id %}" class="btn btn-primary btn-sm mb-1">
+                                            <i class="fas fa-check-double"></i> Mark as Served
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted">No actions</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted">No orders found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+
                             </table>
                         </div>
                     </div>
