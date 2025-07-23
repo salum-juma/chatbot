@@ -10,6 +10,7 @@ from apps.pages.helpers.library.forms import BookForm, SuggestionForm
 from apps.pages.helpers.super_admin.super_admin_form import AddUserForm
 from apps.pages.models import Announcement, AnnouncementCategory, Book, Suggestion, Author, Department, User, Student
 from apps.pages.whatsapp.utils.sms_logic import send_sms
+from apps.pages.models import Year
 
 
 # Super Admin - Add User Page
@@ -79,6 +80,7 @@ def add_user_page(request):
 
             # Create student profile
             if 'student' in role:
+                default_year = Year.objects.get(number=1)
                 Student.objects.create(
                     user=user,
                     enrollment_year=2025,
@@ -86,7 +88,8 @@ def add_user_page(request):
                     reg_number=reg_number,
                     name=full_name,
                     department=department.name if department else 'General',
-                    phone_number=phone_number
+                    phone_number=phone_number,
+                    year=default_year  # 🟢 Set year to Year 1
                 )
 
             # Prepare and send SMS
@@ -95,7 +98,6 @@ def add_user_page(request):
                 f"Your password is: {password}. Please keep it safe."
             )
             sms_sent = send_sms(phone_number, sms_message)
-
             if sms_sent:
                 messages.success(request, f"User created successfully! SMS sent to {phone_number}.")
             else:

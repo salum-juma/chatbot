@@ -90,6 +90,7 @@ class Student(models.Model):
     gender = models.CharField(max_length=10, choices=[("Male", "Male"), ("Female", "Female")], blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     department = models.CharField(max_length=100, default='General')
+    year = models.ForeignKey('Year', on_delete=models.SET_NULL, null=True, blank=True, related_name='students')
 
     def __str__(self):
         return f"{self.user.full_name} ({self.reg_number})"
@@ -290,6 +291,15 @@ class MealOrderItem(models.Model):
 
     def __str__(self):
         return f"{self.menu_item.name} x {self.quantity}"
+    
+
+class Year(models.Model):
+    number = models.PositiveSmallIntegerField(unique=True)
+    label = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.label
+
  
 # -------------------------
 # Cafeteria Products
