@@ -118,7 +118,33 @@ def view_all_users(request):
     users = User.objects.all().select_related('student_profile')
     return render(request, 'super_admin/view_users.html', {'users': users})
 
+def promote_students(request):
+    students = Student.objects.select_related('user', 'year')  # Efficient fetch
+    years = Year.objects.all()  # Fetch all year options
+    return render(request, 'super_admin/promote_students_page.html', {
+        'students': students,
+        'years': years
+    })
 
+
+def promote_student(request):
+    if request.method == 'POST':
+        student_id = request.POST.get('student_id')
+        new_year_id = request.POST.get('new_year_id')
+
+        student = get_object_or_404(Student, id=student_id)
+        try:
+            new_year = Year.objects.get(id=new_year_id)
+            student.year = new_year
+            student.save()
+            messages.success(request, f"{student.name} promoted to Year {new_year.number}.")
+        except Year.DoesNotExist:
+            messages.error(request, "Selected year is invalid.")
+
+        return redirect('promote_students')
+
+    messages.error(request, "Invalid request.")
+    return redirect('promote_students_page')
 
 def announcements_page(request):
     categories = AnnouncementCategory.objects.all()
