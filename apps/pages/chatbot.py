@@ -1,7 +1,7 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 import json
-from apps.pages.models import ChatSession
+from apps.pages.models import ChatSession,Inquiry
 from apps.pages.whatsapp.handlers.announcement_handler import handle_announcement_menu, handle_announcement_selection
 from apps.pages.whatsapp.handlers.cafteria_handler import handle_cafeteria_flow
 from apps.pages.whatsapp.handlers.language_handler import handle_language_selection
@@ -11,6 +11,26 @@ from apps.pages.whatsapp.handlers.library_handler import handle_library_flow
 from apps.pages.whatsapp.handlers.login_handler import handle_login_flow
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message
 
+def handle_student_inquiries(phone_number_id, from_number):
+    """Fetch FAQs from DB and send to student via WhatsApp"""
+    inquiries = Inquiry.objects.all().order_by('-created_at')[:10]  # Limit to 10 latest
+
+    if not inquiries.exists():
+        send_whatsapp_message(phone_number_id, from_number, "❓ No FAQs available at the moment.")
+        return HttpResponse("No inquiries", status=200)
+
+    # Build formatted WhatsApp message
+    msg = "*❓ Frequently Asked Questions:*\n\n"
+    for idx, inquiry in enumerate(inquiries, 1):
+        msg += f"*{idx}. {inquiry.question}*\n{inquiry.answer}\n\n"
+
+    # Optional: Add note if more exist
+    total_count = Inquiry.objects.count()
+    if total_count > 10:
+        msg += f"_And {total_count - 10} more..._\n"
+
+    send_whatsapp_message(phone_number_id, from_number, msg.strip())
+    return HttpResponse("Sent inquiries", status=200)
 
 @csrf_exempt
 def whatsapp_webhook(request):
@@ -109,8 +129,9 @@ def whatsapp_webhook(request):
                     return handle_library_flow(text, phone_number_id, from_number, session)
 
                 if text == "student_inquiries":
-                    send_whatsapp_message(phone_number_id, from_number, "❓ FAQ and common questions.")
-                    return HttpResponse("Sent inquiries", status=200)
+                    # send_whatsapp_message(phone_number_id, from_number, "❓ FAQ and common questions.")
+                    # return HttpResponse("Sent inquiries", status=200)
+                    return handle_student_inquiries(phone_number_id, from_number)
 
                 if text == "student_guidelines":
                     from apps.pages.models import Guideline
@@ -151,3 +172,25 @@ def whatsapp_webhook(request):
             return HttpResponse("Error", status=500)
 
     return HttpResponse("Invalid request", status=400)
+
+
+def handle_student_inquiries(phone_number_id, from_number):
+    """Fetch FAQs from DB and send to student via WhatsApp"""
+    inquiries = Inquiry.objects.all().order_by('-created_at')[:10]  # Limit to 10 latest
+
+    if not inquiries.exists():
+        send_whatsapp_message(phone_number_id, from_number, "❓ No FAQs available at the moment.")
+        return HttpResponse("No inquiries", status=200)
+
+    # Build formatted WhatsApp message
+    msg = "*❓ Frequently Asked Questions:*\n\n"
+    for idx, inquiry in enumerate(inquiries, 1):
+        msg += f"*{idx}. {inquiry.question}*\n{inquiry.answer}\n\n"
+
+    # Optional: Add note if more exist
+    total_count = Inquiry.objects.count()
+    if total_count > 10:
+        msg += f"_And {total_count - 10} more..._\n"
+
+    send_whatsapp_message(phone_number_id, from_number, msg.strip())
+    return HttpResponse("Sent inquiries", status=200)

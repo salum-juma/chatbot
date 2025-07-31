@@ -63,6 +63,11 @@ class Guideline(models.Model):
     title = models.CharField(max_length=255)
     name = models.TextField()  # Content or description of the guideline
 
+class Inquiry(models.Model):
+    question = models.CharField(max_length=255)
+    answer = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
 # -------------------------
 # Department
 # -------------------------

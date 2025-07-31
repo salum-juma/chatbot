@@ -48,6 +48,10 @@ urlpatterns = [
     path('guidelines/delete/<int:guideline_id>/', super_admin.delete_guideline, name='delete_guideline'),
 
 
+    path('inquiries/', super_admin.inquiries_page, name='inquiries_page'),
+    path('inquiries/delete/<int:inquiry_id>/', super_admin.delete_inquiry, name='delete_inquiry'),
+
+
     path('super_admin/promote-students/', super_admin.promote_students, name='promote_students'),
     path('super_admin/promote-student/', super_admin.promote_student, name='promote_student'),
 

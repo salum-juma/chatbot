@@ -10,7 +10,7 @@ from apps.pages.helpers.library.forms import BookForm, SuggestionForm
 from apps.pages.helpers.super_admin.super_admin_form import AddUserForm
 from apps.pages.models import Announcement, AnnouncementCategory, Book, Suggestion, Author, Department, User, Student
 from apps.pages.whatsapp.utils.sms_logic import send_sms
-from apps.pages.models import Year,Guideline
+from apps.pages.models import Year,Guideline,Inquiry
 
 
 # Super Admin - Add User Page
@@ -239,6 +239,30 @@ def delete_announcement(request, ann_id):
     messages.success(request, "🗑️ Announcement deleted successfully.")
     return redirect('announcements')
 
+def inquiries_page(request):
+    """Display inquiries and allow adding new ones"""
+    if request.method == 'POST':
+        question = request.POST.get('question')
+        answer = request.POST.get('answer')
+
+        if question and answer:
+            Inquiry.objects.create(question=question, answer=answer)
+            messages.success(request, "✅ Inquiry added successfully!")
+        else:
+            messages.error(request, "❌ Please fill in all fields.")
+
+        return redirect('inquiries_page')
+
+    inquiries = Inquiry.objects.all()
+    return render(request, 'super_admin/inquiries.html', {'inquiries': inquiries})
+
+
+def delete_inquiry(request, inquiry_id):
+    """Delete an inquiry by ID"""
+    inquiry = get_object_or_404(Inquiry, id=inquiry_id)
+    inquiry.delete()
+    messages.success(request, "🗑️ Inquiry deleted successfully!")
+    return redirect('inquiries_page')
 
 def add_dummy_users(request):
     # Only allow this in development/debug mode
