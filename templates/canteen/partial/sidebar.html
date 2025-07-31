@@ -2,12 +2,12 @@
     <h6 class="text-light px-3 mb-3">Menu</h6>
     <ul class="nav flex-column">
         <!-- Dashboard Link -->
-        <li class="nav-item">
+        <!-- <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
                 href="{% url 'home' %}">
                 <i class="fas fa-tachometer-alt"></i> Dashboard
             </a>
-        </li>
+        </li> -->
 
         <!-- Add Menu Link -->
         <li class="nav-item">
@@ -20,7 +20,7 @@
         <!-- View Orders Link -->
         <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'orders_page' %}active{% endif %}"
-               href="{% url 'orders_page' %}">
+                href="{% url 'orders_page' %}">
                 <i class="fas fa-receipt"></i> View Orders
             </a>
         </li>
@@ -28,7 +28,7 @@
         <!-- Served Orders History Link -->
         <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'served_orders_page' %}active{% endif %}"
-               href="{% url 'served_orders_page' %}">
+                href="{% url 'served_orders_page' %}">
                 <i class="fas fa-clipboard-check"></i> Served Orders History
             </a>
         </li>

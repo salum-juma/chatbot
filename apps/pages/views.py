@@ -161,7 +161,7 @@ def index(request):
             elif user.role == 'librarian':
                 return redirect('librarian_home')
             elif user.role == 'canteen':
-                return redirect('canteen_home')
+                return redirect('menu_page')
             else:
                 return HttpResponse("Unknown role")
         else:
