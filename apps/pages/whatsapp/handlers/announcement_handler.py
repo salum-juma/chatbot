@@ -1,26 +1,39 @@
-from apps.pages.models import Announcement, AnnouncementCategory,ChatSession
-from apps.pages.whatsapp.utils.whatsapp import send_announcement_category, send_whatsapp_list_message, send_whatsapp_message
-from django.http import HttpResponse
 from collections import defaultdict
+from django.http import HttpResponse
+from apps.pages.models import Announcement, AnnouncementCategory, Student
+from apps.pages.whatsapp.utils.whatsapp import (
+    send_announcement_category,
+    send_whatsapp_message
+)
 
-def normalize_phone_number(phone_number: str):
-    """Normalize phone number to +255XXXXXXXXX format for matching"""
+# --- PHONE NORMALIZATION UTILS ---
+
+def normalize_to_last9(phone_number: str):
+    """Return last 9 digits for DB matching like 0620416606."""
     if not phone_number:
         return None
-    phone_number = phone_number.replace(" ", "").replace("+", "")
-    if phone_number.startswith("0"):
-        phone_number = "255" + phone_number[1:]
-    return f"+{phone_number}"
+    digits = phone_number.replace("+", "").replace(" ", "")
+    return digits[-9:]  # Only last 9 digits used for comparison
 
+def is_first_year_student(from_number):
+    """Check DB if phone number belongs to a first-year student."""
+    last9 = normalize_to_last9(from_number)
+    student = Student.objects.filter(phone_number__endswith=last9).first()
+    
+    if student and student.year and student.year.number == 1:
+        print(f"🎓 {from_number} (last9:{last9}) is a first-year student")
+        return True
+    
+    print(f"🎓 {from_number} (last9:{last9}) is NOT a first-year student")
+    return False
+
+# --- MAIN HANDLERS ---
 
 def handle_announcement_menu(phone_number_id, from_number):
-    normalized_number = normalize_phone_number(from_number)
-    print(f"\n📥 handle_announcement_menu called for: {from_number} -> {normalized_number}")
+    print(f"\n📥 handle_announcement_menu called for: {from_number}")
 
-    # Fetch the session and check first-year status
-    session = ChatSession.objects.filter(phone_number=normalized_number).first()
-    is_first_year = session.data.get('first_year', False) if session else False
-    print(f"🎓 First-year status for {normalized_number}: {is_first_year}")
+    # Check DB for first-year status
+    is_first_year = is_first_year_student(from_number)
 
     # ✅ First-year students: directly send their announcements
     if is_first_year:
@@ -60,11 +73,8 @@ def handle_announcement_menu(phone_number_id, from_number):
 
 
 def handle_announcement_selection(text, phone_number_id, from_number):
-    normalized_number = normalize_phone_number(from_number)
-    session = ChatSession.objects.filter(phone_number=normalized_number).first()
-    is_first_year = session.data.get('first_year', False) if session else False
-
-    print(f"\n📥 handle_announcement_selection: {text} for {normalized_number}")
+    is_first_year = is_first_year_student(from_number)
+    print(f"\n📥 handle_announcement_selection: {text} for {from_number}")
     print(f"🎓 First-year status: {is_first_year}")
 
     if text == "ann_view_all":
