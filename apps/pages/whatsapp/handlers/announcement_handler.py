@@ -1,4 +1,4 @@
-from apps.pages.models import Announcement, AnnouncementCategory
+from apps.pages.models import Announcement, AnnouncementCategory,ChatSession
 from apps.pages.whatsapp.utils.whatsapp import send_announcement_category, send_whatsapp_list_message, send_whatsapp_message
 from django.http import HttpResponse
 from collections import defaultdict
