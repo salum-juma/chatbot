@@ -10,7 +10,7 @@ from apps.pages.helpers.library.forms import BookForm, SuggestionForm
 from apps.pages.helpers.super_admin.super_admin_form import AddUserForm
 from apps.pages.models import Announcement, AnnouncementCategory, Book, Suggestion, Author, Department, User, Student
 from apps.pages.whatsapp.utils.sms_logic import send_sms
-from apps.pages.models import Year
+from apps.pages.models import Year,Guideline
 
 
 # Super Admin - Add User Page
@@ -146,6 +146,32 @@ def promote_student(request):
 
     messages.error(request, "Invalid request.")
     return redirect('promote_students_page')
+
+
+def guidelines_page(request):
+    """Display guidelines and allow adding new ones"""
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        name = request.POST.get('name')
+
+        if title and name:
+            Guideline.objects.create(title=title, name=name)
+            messages.success(request, "✅ Guideline added successfully!")
+        else:
+            messages.error(request, "❌ Please fill in all fields.")
+
+        return redirect('guidelines_page')
+
+    guidelines = Guideline.objects.all()
+    return render(request, 'super_admin/guidelines.html', {'guidelines': guidelines})
+
+
+def delete_guideline(request, guideline_id):
+    """Delete a guideline by ID"""
+    guideline = get_object_or_404(Guideline, id=guideline_id)
+    guideline.delete()
+    messages.success(request, "🗑️ Guideline deleted successfully!")
+    return redirect('guidelines_page')
 
 def announcements_page(request):
     categories = AnnouncementCategory.objects.all()

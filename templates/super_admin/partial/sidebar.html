@@ -25,6 +25,13 @@
 
     <li class="nav-item">
       <a class="nav-link {% if request.resolver_match.url_name == 'view-users' %}active{% endif %}"
+        href="{% url 'guidelines_page' %}">
+        <i class="fas fa-users"></i> Guidelines
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'view-users' %}active{% endif %}"
         href="{% url 'promote_students' %}">
         <i class="fas fa-users"></i> Promote Students
       </a>

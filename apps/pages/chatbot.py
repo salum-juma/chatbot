@@ -113,8 +113,21 @@ def whatsapp_webhook(request):
                     return HttpResponse("Sent inquiries", status=200)
 
                 if text == "student_guidelines":
-                    send_whatsapp_message(phone_number_id, from_number, "📖 University processes guidelines.")
+                    from apps.pages.models import Guideline
+
+                    guidelines = Guideline.objects.all().order_by('-created_at')
+
+                    if guidelines.exists():
+                        msg = "*📖 University Guidelines:*\n\n"
+                        for guide in guidelines:
+                            msg += f"🔹 *{guide.title}*\n{guide.name}\n\n"
+
+                        send_whatsapp_message(phone_number_id, from_number, msg.strip())
+                    else:
+                        send_whatsapp_message(phone_number_id, from_number, "📭 No guidelines have been published yet.")
+
                     return HttpResponse("Sent guidelines", status=200)
+
 
                 if text == "back_to_main_menu":
                     send_whatsapp_message(phone_number_id, from_number, "🔙 Back to the main menu.")

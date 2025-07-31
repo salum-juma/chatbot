@@ -59,6 +59,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         return f"{self.registration_no} ({self.role})"
 
 
+class Guideline(models.Model):
+    title = models.CharField(max_length=255)
+    name = models.TextField()  # Content or description of the guideline
+
 # -------------------------
 # Department
 # -------------------------
