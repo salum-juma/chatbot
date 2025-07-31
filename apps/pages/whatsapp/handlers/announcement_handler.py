@@ -7,7 +7,7 @@ from apps.pages.whatsapp.utils.whatsapp import (
 )
 
 # --- PHONE NORMALIZATION UTILS ---
-
+# test
 def normalize_to_last9(phone_number: str):
     """Return last 9 digits for DB matching like 0620416606."""
     if not phone_number:
