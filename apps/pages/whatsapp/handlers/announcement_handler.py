@@ -34,21 +34,32 @@ def handle_announcement_menu(phone_number_id, from_number):
 
 
 def handle_announcement_selection(text, phone_number_id, from_number):
-    print(f"📥 handle_announcement_selection called with text: {text}")
+    session = ChatSession.objects.get(phone_number=from_number)
+    is_first_year = session.data.get('first_year', False)
 
     if text == "ann_view_all":
-        announcements = Announcement.objects.select_related('category').order_by('-created_at')
+        announcements = Announcement.objects.all().order_by('-created_at')
+
+        # ✅ Non-first-year students should not see first-year-only
+        if not is_first_year:
+            announcements = announcements.filter(first_year_only=False)
+
         print(f"📋 Viewing all announcements. Count: {announcements.count()}")
         return send_announcement_grouped(announcements, phone_number_id, from_number)
 
     elif text.startswith("ann_category_"):
         category_id = text.replace("ann_category_", "")
         announcements = Announcement.objects.filter(category_id=category_id).order_by('-created_at')
+
+        if not is_first_year:
+            announcements = announcements.filter(first_year_only=False)
+
         print(f"📂 Viewing announcements for category ID {category_id}. Count: {announcements.count()}")
         return send_announcement_grouped(announcements, phone_number_id, from_number, single_category=True)
 
     print("❌ Unrecognized announcement selection")
     return HttpResponse("Unrecognized announcement selection", status=400)
+
 
 
 def send_announcement_grouped(announcements, phone_number_id, from_number, single_category=False):

@@ -90,6 +90,7 @@ class Student(models.Model):
     gender = models.CharField(max_length=10, choices=[("Male", "Male"), ("Female", "Female")], blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     department = models.CharField(max_length=100, default='General')
+
     year = models.ForeignKey('Year', on_delete=models.SET_NULL, null=True, blank=True, related_name='students')
 
     def __str__(self):
@@ -239,9 +240,11 @@ class Announcement(models.Model):
     body = models.TextField()
     category = models.ForeignKey(AnnouncementCategory, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+    first_year_only = models.BooleanField(default=False)  # ✅ NEW FIELD
 
     def __str__(self):
         return self.title
+
 
 class MenuItem(models.Model):
     name = models.CharField(max_length=100, unique=True)

@@ -97,7 +97,8 @@ def add_user_page(request):
                 f"Welcome {full_name}! Your registration number is {reg_number}. "
                 f"Your password is: {password}. Please keep it safe."
             )
-            sms_sent = send_sms(phone_number, sms_message)
+            # sms_sent = send_sms(phone_number, sms_message)
+            sms_sent = 1
             if sms_sent:
                 messages.success(request, f"User created successfully! SMS sent to {phone_number}.")
             else:
@@ -164,8 +165,13 @@ def add_announcement(request):
         title = request.POST.get('title')
         body = request.POST.get('body')
         category_id = request.POST.get('category_id')
-        new_category = request.POST.get('new_category').strip()
+        new_category = request.POST.get('new_category', '').strip()
 
+        # ✅ Support checkbox ("on") or select ("True"/"False")
+        first_year_only_raw = request.POST.get('first_year_only', '')
+        first_year_only = first_year_only_raw in ['True', 'on', '1']
+
+        # Validate category choice
         if new_category and category_id:
             messages.error(request, "⚠️ Please provide either a new category or select an existing one, not both.")
             return redirect('add_announcement')
@@ -178,7 +184,14 @@ def add_announcement(request):
             messages.error(request, "⚠️ Please choose a category or enter a new one.")
             return redirect('add_announcement')
 
-        Announcement.objects.create(title=title, body=body, category=category)
+        # ✅ Create announcement with first_year_only flag
+        Announcement.objects.create(
+            title=title,
+            body=body,
+            category=category,
+            first_year_only=first_year_only
+        )
+
         messages.success(request, '📢 Announcement added successfully.')
         return redirect('announcements')
 

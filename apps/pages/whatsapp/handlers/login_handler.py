@@ -2,6 +2,25 @@ from django.contrib.auth import authenticate
 from apps.pages.whatsapp.utils.whatsapp import send_whatsapp_message, send_whatsapp_list_message
 from django.http import HttpResponse
 from apps.pages.whatsapp.utils.eng_menu import send_student_services_menu
+from models import Student
+
+
+def normalize_phone_number(phone_number: str):
+    """
+    Convert local or WhatsApp number to +255XXXXXXXXX format.
+    """
+    if not phone_number:
+        return None
+
+    # Remove spaces and leading +
+    phone_number = phone_number.replace(" ", "").replace("+", "")
+
+    # Convert starting with 0 to 255 (Tanzania)
+    if phone_number.startswith("0"):
+        phone_number = "255" + phone_number[1:]
+
+    # Ensure it starts with +
+    return f"+{phone_number}"
 
 def handle_login_flow(text, phone_number_id, from_number, session):
     if session.stage == 'awaiting_reg_number':
@@ -18,6 +37,24 @@ def handle_login_flow(text, phone_number_id, from_number, session):
         user = authenticate(username=session.reg_number, password=text)
         if user:
             session.stage = 'student_portal_main'
+
+              # Default to not first year
+            session.data['first_year'] = False
+
+            # Only check student details if role is student
+            if user.role == 'student':
+                from_number_normalized = normalize_phone_number(from_number)
+
+                student = Student.objects.filter(user=user).first()
+                if student and student.phone_number:
+                    student_phone_normalized = normalize_phone_number(student.phone_number)
+
+                    # ✅ Match normalized numbers
+                    if student_phone_normalized == from_number_normalized:
+                        # Check if student is first year
+                        if student.year and student.year.number == 1:
+                            session.data['first_year'] = True
+
             session.save()
             send_student_services_menu(phone_number_id, from_number)
             return HttpResponse("Login success", status=200)

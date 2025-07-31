@@ -80,6 +80,12 @@
                                 placeholder="Leave empty if not needed" />
                         </div>
 
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="first_year_only" name="first_year_only" value="True">
+                            <label class="form-check-label" for="first_year_only">First Year Students Only</label>
+                        </div>
+
+
                         <button type="submit" class="btn btn-primary">Add Announcement</button>
                     </form>
 
@@ -98,6 +104,7 @@
                                         <th>Title</th>
                                         <th>Message</th>
                                         <th>Posted On</th>
+                                        <th>First Year</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -108,6 +115,14 @@
                                         <td>{{ ann.title }}</td>
                                         <td>{{ ann.body }}</td>
                                         <td>{{ ann.created_at|date:"M d, Y H:i" }}</td>
+                                        <td>
+                                            {% if ann.first_year_only %}
+                                            ✅ Yes
+                                            {% else %}
+                                            ❌ No
+                                            {% endif %}
+                                        </td>
+
                                         <td>
                                             <a href="{% url 'delete_announcement' ann.id %}"
                                                 class="btn btn-sm btn-danger"
