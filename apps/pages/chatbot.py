@@ -1,7 +1,7 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 import json
-from apps.pages.models import ChatSession,Inquiry
+from apps.pages.models import ChatSession,Inquiry,Guideline
 from apps.pages.whatsapp.handlers.announcement_handler import handle_announcement_menu, handle_announcement_selection
 from apps.pages.whatsapp.handlers.cafteria_handler import handle_cafeteria_flow
 from apps.pages.whatsapp.handlers.language_handler import handle_language_selection
@@ -134,9 +134,7 @@ def whatsapp_webhook(request):
                     return handle_student_inquiries(phone_number_id, from_number)
 
                 if text == "student_guidelines":
-                    from apps.pages.models import Guideline
-
-                    guidelines = Guideline.objects.all().order_by('-created_at')
+                    guidelines = Guideline.objects.all()
 
                     if guidelines.exists():
                         msg = "*📖 University Guidelines:*\n\n"
