@@ -83,14 +83,14 @@ def send_language_selection(phone_number_id, to):
                             "id": "lang_english",
                             "title": "🇬🇧 English"
                         }
-                    },
-                    {
-                        "type": "reply",
-                        "reply": {
-                            "id": "lang_swahili",
-                            "title": "🇹🇿 Swahili"
-                        }
                     }
+                    # {
+                    #     "type": "reply",
+                    #     "reply": {
+                    #         "id": "lang_swahili",
+                    #         "title": "🇹🇿 Swahili"
+                    #     }
+                    # }
                 ]
             }
         }
