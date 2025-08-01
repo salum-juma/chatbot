@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Manage Inquiries / FAQs</title>
+    <title>Manage Announcements</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
@@ -46,25 +46,118 @@
             <!-- Main Content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
                 <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">Manage Inquiries / FAQs</h1>
+                    <h1 class="h2">Manage Announcements</h1>
                 </div>
 
                 <div class="content">
-                    <!-- Add Inquiry Form -->
-                    <form method="post" action="{% url 'inquiries_page' %}" class="mb-5">
+                    <!-- Add Announcement Form -->
+                    <form method="post" action="{% url 'add_announcement' %}" class="mb-5">
                         {% csrf_token %}
 
                         <div class="mb-3">
-                            <label for="question" class="form-label">Question</label>
-                            <input type="text" name="question" class="form-control" id="question" required />
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" name="title" class="form-control" id="title" required />
                         </div>
 
                         <div class="mb-3">
-                            <label for="answer" class="form-label">Answer</label>
-                            <textarea name="answer" class="form-control" id="answer" rows="4" required></textarea>
+                            <label for="body" class="form-label">Message</label>
+                            <textarea name="body" class="form-control" id="body" rows="4" required></textarea>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">Add Inquiry</button>
+                        <div class="mb-3">
+                            <label for="category_id" class="form-label">Choose Category</label>
+                            <select name="category_id" id="category_id" class="form-select">
+                                <option value="" selected>-- Select a category --</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="new_category" class="form-label">Or Add New Category</label>
+                            <input type="text" name="new_category" class="form-control" id="new_category"
+                                placeholder="Leave empty if not needed" />
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="first_year_only" name="first_year_only"
+                                value="True">
+                            <label class="form-check-label" for="first_year_only">First Year Students Only</label>
+                        </div>
+
+
+                        <button type="submit" class="btn btn-primary">Add Announcement</button>
                     </form>
 
-                    <!-- Current Inquiries -->
+                    <!-- Announcements grouped by category -->
+                    <h4 class="mb-3">Current Announcements</h4>
+
+                    {% if announcements %}
+                    {% for category, anns in announcements.items %}
+                    <div class="mb-4">
+                        <h5 class="text-primary">{{ category }}</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Title</th>
+                                        <th>Message</th>
+                                        <th>Posted On</th>
+                                        <th>First Year</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ann in anns %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ ann.title }}</td>
+                                        <td>{{ ann.body }}</td>
+                                        <td>{{ ann.created_at|date:"M d, Y H:i" }}</td>
+                                        <td>
+                                            {% if ann.first_year_only %}
+                                            ✅ Yes
+                                            {% else %}
+                                            ❌ No
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            <a href="{% url 'delete_announcement' ann.id %}"
+                                                class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Are you sure you want to delete this announcement?');">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-center">No announcements yet.</p>
+                    {% endif %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+<script>
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const existing = document.getElementById('category_id').value;
+        const newCat = document.getElementById('new_category').value.trim();
+
+        if (existing && newCat) {
+            e.preventDefault();
+            alert("❌ Please either select an existing category or type a new one — not both.");
+        }
+    });
+</script>
+
+</html>
