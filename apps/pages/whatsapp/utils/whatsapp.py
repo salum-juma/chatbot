@@ -73,7 +73,7 @@ def send_language_selection(phone_number_id, to):
         "interactive": {
             "type": "button",
             "body": {
-                "text": "Hello! 👋 Welcome to AskJo, your smart assistant for St. Joseph University in Tanzania.\n\nPlease select your preferred language:\n\n(Habari! 👋 Karibu AskJo, msaidizi wako wa kidijitali kwa Chuo Kikuu cha Mtakatifu Joseph Tanzania. Tafadhali chagua lugha unayopendelea:)"
+                "text": "Hello! 👋 Welcome to AskJo, your smart assistant for St. Joseph University in Tanzania.\n\nPlease click proceed to continue."
             },
             "action": {
                 "buttons": [
@@ -81,7 +81,7 @@ def send_language_selection(phone_number_id, to):
                         "type": "reply",
                         "reply": {
                             "id": "lang_english",
-                            "title": "🇬🇧 English"
+                            "title": "Proceed"
                         }
                     }
                     # {
