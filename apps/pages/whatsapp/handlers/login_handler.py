@@ -17,6 +17,7 @@ def normalize_phone_number(phone_number: str):
 
     # Convert starting with 0 to 255 (Tanzania)
     if phone_number.startswith("0"):
+        # phone_number = "255" + phone_number[1:]
         phone_number = "255" + phone_number[1:]
 
     # Ensure it starts with +
